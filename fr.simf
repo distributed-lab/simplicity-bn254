@@ -1,0 +1,46 @@
+#define mod_r 30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
+
+type Fr = (u64, u64, u64, u64);
+
+fn fr_new(value: (u64, u64, u64, u64)) -> Fr {
+    // TODO: take mod
+    (value)
+}
+
+fn fr_from_u256(value: u256) -> Fr {
+    // let (x0, x1, x2, x3): (u64, u64, u64, u64) = <u256>::into(value);
+    // (x0, x1, x2, x3)
+    // TODO: take mod
+    <u256>::into(value)
+}
+
+// Returns constant 4 64-bit limbs for bn254 curve modulus, where the first one - least 
+// significant limb.
+//
+// Modulus for bn254 curve is:
+//  - base 10: 21888242871839275222246405745257275088696311157297823662689037894645226208583
+//  - base 16: 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
+fn fr_mod() -> Fr {
+    (4332616871279656263, 10917124144477883021, 13281191951274694749, 3486998266802970665)
+}
+
+fn smaller_then_modulus(value: Fr) -> bool {
+    let (q0, q1, q2, q3): (u64, u64, u64, u64) = fr_mod();
+    let (v0, v1, v2, v3): (u64, u64, u64, u64) = value;
+
+    
+}
+
+fn add_fr(x: Fr, y: Fr) -> (bool, Fr) {
+    let (x0, x1, x2, x3): (u64, u64, u64, u64) = x;
+    let (y0, y1, y2, y3): (u64, u64, u64, u64) = y;
+
+    let (carry, r3): (bool, u64) = jet::full_add_64(false, x3, y3);
+    let (carry, r2): (bool, u64) = jet::full_add_64(carry, x2, y2);
+    let (carry, r1): (bool, u64) = jet::full_add_64(carry, x1, y1);
+    let (carry, r0): (bool, u64) = jet::full_add_64(carry, x0, y0);
+
+    let r23: u128 = <(u64, u64)>::into((r2, r3));
+    let r01: u128 = <(u64, u64)>::into((r0, r1));
+    (carry, <(u128, u128)>::into((r01, r23)))
+}

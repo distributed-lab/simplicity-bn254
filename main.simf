@@ -1,0 +1,7 @@
+#include "fr.simf"
+
+fn main() {
+    // let (_, _): (bool, u256) = add_u256(0, 0);
+    // let _: bool = dbg!(c);
+    // let _: u256 = dbg!(res);
+}
