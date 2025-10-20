@@ -71,10 +71,28 @@ fn fr_is_zero(x: Fr) -> bool {
     let x2_eq: u1 = <bool>::into(jet::eq_64(x2, 0));
     let x3_eq: u1 = <bool>::into(jet::eq_64(x3, 0));
 
+    let _: u64 = dbg!(x0);
+    let _: u64 = dbg!(x1);
+    let _: u64 = dbg!(x2);
+    let _: u64 = dbg!(x3);
+
     let res: u1 = jet::and_1(jet::and_1(x0_eq, x1_eq), jet::and_1(x2_eq, x3_eq));
     <u1>::into(res)
 }
 
+// Returns true if value x is equal to value y.
+fn fr_eq(x: Fr, y: Fr) -> bool {
+    let (x0, x1, x2, x3): (u64, u64, u64, u64) = x;
+    let (y0, y1, y2, y3): (u64, u64, u64, u64) = y;
+
+    let x0_eq: u1 = <bool>::into(jet::eq_64(x0, y0));
+    let x1_eq: u1 = <bool>::into(jet::eq_64(x1, y1));
+    let x2_eq: u1 = <bool>::into(jet::eq_64(x2, y2));
+    let x3_eq: u1 = <bool>::into(jet::eq_64(x3, y3));
+
+    let res: u1 = jet::and_1(jet::and_1(x0_eq, x1_eq), jet::and_1(x2_eq, x3_eq));
+    <u1>::into(res)
+}
 
 // Returns the sum of provided x and y values taken by group modulus.
 //
@@ -93,8 +111,8 @@ fn fr_add(x: Fr, y: Fr) -> Fr {
         false => {
             let (m0, m1, m2, m3): (u64, u64, u64, u64) = fr_mod();
             let (carry, s3): (bool, u64) = jet::full_subtract_64(false, r3, m3);
-            let (carry, s2): (bool, u64) = jet::full_subtract_64(carry, r0, m2);
-            let (carry, s1): (bool, u64) = jet::full_subtract_64(carry, r0, m1);
+            let (carry, s2): (bool, u64) = jet::full_subtract_64(carry, r2, m2);
+            let (carry, s1): (bool, u64) = jet::full_subtract_64(carry, r1, m1);
             let (_, s0): (bool, u64) = jet::full_subtract_64(carry, r0, m0);
 
             (s0, s1, s2, s3)
@@ -172,3 +190,145 @@ fn fr_neg(x: Fr) -> Fr {
         }
     }
 }
+
+#ifdef TESTING
+
+fn test_fr_eq() {
+    let a: Fr = fr_mod();
+    let b: Fr = fr_mod();
+    assert!(fr_eq(a, b))   
+}
+
+fn test_fr_add_mod() {
+    // Only 1 limb is not zero
+    let expected_1limb: Fr = fr_from_u256(200);
+    let actual_1limb: Fr = fr_add(fr_from_u256(100), fr_from_u256(100));
+
+    let _: u256 = dbg!(fr_to_u256(expected_1limb));
+    let _: u256 = dbg!(fr_to_u256(actual_1limb));
+
+    assert!(fr_eq(actual_1limb, expected_1limb));
+
+    // 3 limbs are not zero
+    let expected_3limb: Fr = fr_from_u256(4567623456734502163058672543468019698188889198785079926);
+    let actual_3limb: Fr = fr_add(
+        fr_from_u256(4567623456734423769034092193793479852479845689346389469), 
+        fr_from_u256(78394024580349674539845709043509438690457)
+    );
+
+    let _: u256 = dbg!(fr_to_u256(expected_3limb));
+    let _: u256 = dbg!(fr_to_u256(actual_3limb));
+
+    assert!(fr_eq(expected_3limb, actual_3limb));
+
+    // Module overflow
+    let expected_overflow: Fr = fr_from_u256(100);
+    let actual_overflow: Fr = fr_add(fr_mod(), fr_from_u256(100));
+
+    let _: u256 = dbg!(fr_to_u256(expected_overflow));
+    let _: u256 = dbg!(fr_to_u256(actual_overflow));
+
+    assert!(fr_eq(expected_overflow, actual_overflow))   
+}
+
+fn test_fr_double_mod() {
+    // Only 1 limb is not zero
+    let expected_1limb: Fr = fr_from_u256(200);
+    let actual_1limb: Fr = fr_double(fr_from_u256(100));
+
+    let _: u256 = dbg!(fr_to_u256(expected_1limb));
+    let _: u256 = dbg!(fr_to_u256(actual_1limb));
+
+    assert!(fr_eq(actual_1limb, expected_1limb));
+
+    // 3 limbs are not zero
+    let expected_3limb: Fr = fr_from_u256(9135246913468847538068184387586959704959691378692778938);
+    let actual_3limb: Fr = fr_double(fr_from_u256(4567623456734423769034092193793479852479845689346389469));
+
+    let _: u256 = dbg!(fr_to_u256(expected_3limb));
+    let _: u256 = dbg!(fr_to_u256(actual_3limb));
+
+    assert!(fr_eq(expected_3limb, actual_3limb));
+
+    // Module overflow
+    let expected_overflow: Fr = fr_from_u256(21888242871839275222246405745257275088696311157297823662689037894645226208583);
+    let actual_overflow: Fr = fr_double(fr_mod());
+
+    let _: u256 = dbg!(fr_to_u256(expected_overflow));
+    let _: u256 = dbg!(fr_to_u256(actual_overflow));
+
+    assert!(fr_eq(expected_overflow, actual_overflow))   
+}
+
+
+fn test_fr_sub_mod() {
+    // Only 1 limb is not zero
+    let expected_1limb: Fr = fr_from_u256(100);
+    let actual_1limb: Fr = fr_sub(fr_from_u256(200), fr_from_u256(100));
+
+    let _: u256 = dbg!(fr_to_u256(expected_1limb));
+    let _: u256 = dbg!(fr_to_u256(actual_1limb));
+
+    assert!(fr_eq(actual_1limb, expected_1limb));
+
+    // 3 limbs are not zero
+    let expected_3limb: Fr = fr_from_u256(4567623456734345375009511844118940006770802179907699012);
+    let actual_3limb: Fr = fr_sub(
+        fr_from_u256(4567623456734423769034092193793479852479845689346389469), 
+        fr_from_u256(78394024580349674539845709043509438690457)
+    );
+
+    let _: u256 = dbg!(fr_to_u256(expected_3limb));
+    let _: u256 = dbg!(fr_to_u256(actual_3limb));
+
+    assert!(fr_eq(expected_3limb, actual_3limb));
+
+    // Module overflow
+    let expected_overflow: Fr = fr_from_u256(100);
+    let actual_overflow: Fr = fr_sub(fr_from_u256(100), fr_mod());
+
+    let _: u256 = dbg!(fr_to_u256(expected_overflow));
+    let _: u256 = dbg!(fr_to_u256(actual_overflow));
+
+    assert!(fr_eq(expected_overflow, actual_overflow))   
+}
+
+fn test_fr_is_zero() {
+    // Zero as parameter
+    assert!(fr_is_zero(fr_from_u256(0)));
+
+    // One limb is not zero 
+    let is_zero: bool = fr_is_zero(fr_from_u256(18446744073709551616));
+    assert!(<u1>::into(jet::complement_1(<bool>::into(is_zero))))
+}
+
+fn test_fr_neg() {
+    // Negate zero
+    let expected_zero: Fr = fr_from_u256(0);
+    let actual_zero: Fr = fr_neg(fr_from_u256(0));
+
+    let _: u256 = dbg!(fr_to_u256(expected_zero));
+    let _: u256 = dbg!(fr_to_u256(actual_zero));
+
+    assert!(fr_eq(actual_zero, expected_zero));
+
+    // Only 1 limb is not zero
+    let expected_1limb: Fr = fr_from_u256(21888242871839275222246405745257275088696311157297823662689037894645226208483);
+    let actual_1limb: Fr = fr_neg(fr_from_u256(100));
+
+    let _: u256 = dbg!(fr_to_u256(expected_1limb));
+    let _: u256 = dbg!(fr_to_u256(actual_1limb));
+
+    assert!(fr_eq(actual_1limb, expected_1limb));
+
+    // 3 limbs are not zero
+    let expected_3limb: Fr = fr_from_u256(21888242871839275222241838121800540664927277065104030182836558048955879819114);
+    let actual_3limb: Fr = fr_neg(fr_from_u256(4567623456734423769034092193793479852479845689346389469));
+
+    let _: u256 = dbg!(fr_to_u256(expected_3limb));
+    let _: u256 = dbg!(fr_to_u256(actual_3limb));
+
+    assert!(fr_eq(expected_3limb, actual_3limb));
+}
+
+#endif

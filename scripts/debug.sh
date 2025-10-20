@@ -1,6 +1,7 @@
-mkdir test
-mcpp -P -I src main.simf -o test/global.simf
-output=$(simfony debug test/global.simf)
+[ -d target ] || mkdir target
+
+mcpp -P -I src main.simf -o target/global.simf
+output=$(simfony debug target/global.simf)
 
 if echo "$output" | grep -q "Result: ε"; then
     echo "$output"
