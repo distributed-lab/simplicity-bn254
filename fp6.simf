@@ -1,0 +1,51 @@
+#include "fp2.simf"
+
+type Fp6 = (Fp2, Fp2, Fp2);
+
+fn fp6_add(x: Fp6, y: Fp6) -> Fp6 {
+    let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
+    let (y0, y1, y2): (Fp2, Fp2, Fp2) = y;
+    (fp2_add(x0, y0), fp2_add(x1, y1), fp2_add(x2, y2))
+}
+
+fn fp6_sub(x: Fp6, y: Fp6) -> Fp6 {
+    let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
+    let (y0, y1, y2): (Fp2, Fp2, Fp2) = y;
+    (fp2_sub(x0, y0), fp2_sub(x1, y1), fp2_sub(x2, y2))
+}
+
+fn fp6_double(x: Fp6) -> Fp6 {
+    let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
+    (fp2_double(x0), fp2_double(x1), fp2_double(x2))
+}
+
+fn fp6_neg(x: Fp6) -> Fp6 {
+    let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
+    (fp2_neg(x0), fp2_neg(x1), fp2_neg(x2))
+}
+
+fn fp6_conjugate(x: Fp6) -> Fp6 {
+    let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
+    (x0, x1, fp2_neg(x2))
+} 
+
+fn fp6_eq(x: Fp6, y: Fp6) -> bool {
+    let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
+    let (y0, y1, y2): (Fp2, Fp2, Fp2) = y;
+
+    let and_01: u1 = jet::and_1(
+        <bool>::into(fp2_eq(x0, y0)),
+        <bool>::into(fp2_eq(x1, y1))
+    );
+
+    let res: u1 = jet::and_1(
+       and_01,
+        <bool>::into(fp2_eq(x2, y2))
+    );
+
+    <u1>::into(res)
+}
+
+#ifdef TESTING
+
+#endif

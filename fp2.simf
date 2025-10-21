@@ -1,0 +1,49 @@
+#include "field.simf"
+
+type Fp2 = (FieldElement, FieldElement);
+
+fn fp2_new(x: u256, y: u256) -> Fp2 {
+    (fp_new(x), fp_new(y))
+}
+
+fn fp2_add(x: Fp2, y: Fp2) -> Fp2 {
+    let (x0, x1): (FieldElement, FieldElement) = x;
+    let (y0, y1): (FieldElement, FieldElement) = y;
+    (field_elem_add(x0, y0), field_elem_add(x1, y1))
+}
+
+fn fp2_sub(x: Fp2, y: Fp2) -> Fp2 {
+    let (x0, x1): (FieldElement, FieldElement) = x;
+    let (y0, y1): (FieldElement, FieldElement) = y;
+    (field_elem_sub(x0, y0), field_elem_sub(x1, y1))
+}
+
+fn fp2_double(x: Fp2) -> Fp2 {
+    let (x0, x1): (FieldElement, FieldElement) = x;
+    (field_elem_double(x0), field_elem_double(x1))
+}
+
+fn fp2_neg(x: Fp2) -> Fp2 {
+    let (x0, x1): (FieldElement, FieldElement) = x;
+    (field_elem_neg(x0), field_elem_neg(x1))
+}
+
+fn fp2_conjugate(x: Fp2) -> Fp2 {
+    let (x0, x1): (FieldElement, FieldElement) = x;
+    (x0, field_elem_neg(x1))
+} 
+
+fn fp2_eq(x: Fp2, y: Fp2) -> bool {
+    let (x0, x1): (FieldElement, FieldElement) = x;
+    let (y0, y1): (FieldElement, FieldElement) = y;
+
+    let res: u1 = jet::and_1(
+        <bool>::into(field_elem_eq(x0, y0)),
+        <bool>::into(field_elem_eq(x1, y1))
+    );
+    <u1>::into(res)
+}
+
+#ifdef TESTING
+
+#endif
