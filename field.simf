@@ -5,11 +5,13 @@ type BigNum = (u64, u64, u64, u64);
 // Field element that is represented with a BigNum value and modulus.
 type FieldElement = (BigNum, BigNum);
 
+#define qInvNeg 9786893198990664585
+
 // Fp prime field modulus. 
-//  - base 10: 16798108731015832284940804142231733909889187121439069848933715426072753864723
-//  - base 16: 0x2523648240000001BA344D80000000086121000000000013A700000000000013
+//  - base 10: 21888242871839275222246405745257275088696311157297823662689037894645226208583
+//  - base 16: 0x30644E72E131A029B85045B68181585D97816A916871CA8D3C208C16D87CFD47
 fn fp_mod() -> u256 {
-    16798108731015832284940804142231733909889187121439069848933715426072753864723
+    21888242871839275222246405745257275088696311157297823662689037894645226208583
 }
 
 // Creates new Fp with the provided value.
@@ -19,10 +21,10 @@ fn fp_new(value: u256) -> FieldElement {
 }
 
 // Fr prime field modulus. 
-//  - base 10: 21888242871839275222246405745257275088696311157297823662689037894645226208583
-//  - base 16: 0x30644E72E131A029B85045B68181585D97816A916871CA8D3C208C16D87CFD47
+//  - base 10: 21888242871839275222246405745257275088548364400416034343698204186575808495617
+//  - base 16: 0x30644E72E131A029B85045B68181585D2833E84879B9709143E1F593F0000001
 fn fr_mod() -> u256 {
-    21888242871839275222246405745257275088696311157297823662689037894645226208583
+    21888242871839275222246405745257275088548364400416034343698204186575808495617
 }
 
 // Creates new Fr with the provided value.
@@ -200,6 +202,152 @@ fn field_elem_neg(x: FieldElement) -> FieldElement {
     }
 }
 
+fn field_elem_q_inv_mul(
+    c2: u64,
+    q0: u64, q1: u64, q2: u64, q3: u64,
+    t0: u64, t1: u64, t2: u64, t3: u64
+) -> ((u64, u64, u64, u64), (u64, u64, u64, u64)) {
+    let (_, m1): (u64, u64) = <u128>::into(jet::full_multiply_64((qInvNeg, t0), (0, 0)));
+
+    let (u0, c1): (u64, u64) = <u128>::into(jet::full_multiply_64((m1, q3), (0, 0)));
+    let (c0, _): (bool, u64) = jet::full_add_64(false, t0, c1);
+    let (u1, c1): (u64, u64) = <u128>::into(jet::full_multiply_64((m1, q2), (0, 0)));
+    let (c0, t0): (bool, u64) = jet::full_add_64(c0, t1, c1);
+    let (u2, c1): (u64, u64) = <u128>::into(jet::full_multiply_64((m1, q1), (0, 0)));
+    let (c0, t1): (bool, u64) = jet::full_add_64(c0, t2, c1);
+    let (u3, c1): (u64, u64) = <u128>::into(jet::full_multiply_64((m1, q0), (0, 0)));
+
+    let (c0, t2): (bool, u64) = jet::full_add_64(c0, 0, c1);
+    let (_, u3): (bool, u64) = jet::full_add_64(c0, u3, 0);
+    let (c0, t0): (bool, u64) = jet::full_add_64(false, u0, t0);
+    let (c0, t1): (bool, u64) = jet::full_add_64(c0, u1, t1);
+    let (c0, t2): (bool, u64) = jet::full_add_64(c0, u2, t2);
+    let (_, c2): (bool, u64) = jet::full_add_64(c0, c2, 0);
+    let (c0, t2): (bool, u64) = jet::full_add_64(false, t3, t2);
+    let (_, t3): (bool, u64) = jet::full_add_64(c0, u3, c2);
+
+    ((u0, u1, u2, u3), (t0, t1, t2, t3))
+}
+
+fn field_elem_process_x_mul(
+    x: u64, 
+    y0: u64, y1: u64, y2: u64, y3: u64, 
+    t0: u64, t1: u64, t2: u64, t3: u64,
+    q0: u64, q1: u64, q2: u64, q3: u64
+) -> ((u64, u64, u64, u64), (u64, u64, u64, u64)) {
+    let (u0, c1): (u64, u64) = <u128>::into(jet::full_multiply_64((x, y3), (0, 0)));
+    let (c0, t0): (bool, u64) = jet::full_add_64(false, c1, t0);
+    let (u1, c1): (u64, u64) = <u128>::into(jet::full_multiply_64((x, y2), (0, 0)));
+    let (c0, t1): (bool, u64) = jet::full_add_64(c0, c1, t1);
+    let (u2, c1): (u64, u64) = <u128>::into(jet::full_multiply_64((x, y1), (0, 0)));
+    let (c0, t2): (bool, u64) = jet::full_add_64(c0, c1, t2);
+    let (u3, c1): (u64, u64) = <u128>::into(jet::full_multiply_64((x, y0), (0, 0)));
+    let (c0, t3): (bool, u64) = jet::full_add_64(c0, c1, t3);
+
+    let (_, c2): (bool, u64) = jet::full_add_64(c0, 0, 0);
+    let (c0, t1): (bool, u64) = jet::full_add_64(false, u0, t1);
+    let (c0, t2): (bool, u64) = jet::full_add_64(c0, u1, t2);
+    let (c0, t3): (bool, u64) = jet::full_add_64(c0, u2, t3);
+    let (_, c2): (bool, u64) = jet::full_add_64(c0, u3, c2);
+
+    (field_elem_q_inv_mul(c2, q0, q1, q2, q3, t0, t1, t2, t3))
+}
+
+fn field_elem_mul(x: FieldElement, y: FieldElement) -> FieldElement {
+    let ((x0, x1, x2, x3), x_mod): ((u64, u64, u64, u64), BigNum) = x;
+    let ((y0, y1, y2, y3), _): ((u64, u64, u64, u64), BigNum) = y;
+    let (q0, q1, q2, q3): (u64, u64, u64, u64) = x_mod;
+
+    // TODO: lets brake down this part into several functions
+    // Process x3
+    let (u0, t0): (u64, u64) = <u128>::into(jet::full_multiply_64((x3, y3), (0, 0)));
+    let (u1, t1): (u64, u64) = <u128>::into(jet::full_multiply_64((x3, y2), (0, 0)));
+    let (u2, t2): (u64, u64) = <u128>::into(jet::full_multiply_64((x3, y1), (0, 0)));
+    let (u3, t3): (u64, u64) = <u128>::into(jet::full_multiply_64((x3, y0), (0, 0)));
+    let (c0, t1): (bool, u64) = jet::full_add_64(false, u0, t1);
+    let (c0, t2): (bool, u64) = jet::full_add_64(c0, u1, t2);
+    let (c0, t3): (bool, u64) = jet::full_add_64(c0, u2, t3);
+    let (_, c2): (bool, u64) = jet::full_add_64(c0, u3, 0);
+
+    let (
+        (u0, u1, u2, u3), 
+        (t0, t1, t2, t3)
+    ): (
+        (u64, u64, u64, u64), 
+        (u64, u64, u64, u64)
+    ) = field_elem_q_inv_mul(c2, q0, q1, q2, q3, t0, t1, t2, t3);
+
+    // Process x2
+    let (
+        (u0, u1, u2, u3), 
+        (t0, t1, t2, t3)
+    ): (
+        (u64, u64, u64, u64), 
+        (u64, u64, u64, u64)
+    ) = field_elem_process_x_mul(x2, y0, y1, y2, y3, t0, t1, t2, t3, q0, q1, q2, q3);
+
+    // Process x1
+    let (u0, c1): (u64, u64) = <u128>::into(jet::full_multiply_64((x1, y3), (0, 0)));
+    let (c0, t0): (bool, u64) = jet::full_add_64(false, c1, t0);
+    let (u1, c1): (u64, u64) = <u128>::into(jet::full_multiply_64((x1, y2), (0, 0)));
+    let (c0, t1): (bool, u64) = jet::full_add_64(c0, c1, t1);
+    let (u2, c1): (u64, u64) = <u128>::into(jet::full_multiply_64((x1, y1), (0, 0)));
+    let (c0, t2): (bool, u64) = jet::full_add_64(c0, c1, t2);
+    let (u3, c1): (u64, u64) = <u128>::into(jet::full_multiply_64((x1, y0), (0, 0)));
+    let (c0, t3): (bool, u64) = jet::full_add_64(c0, c1, t3);
+
+    let (_, c2): (bool, u64) = jet::full_add_64(c0, 0, 0);
+    let (c0, t1): (bool, u64) = jet::full_add_64(false, u0, t1);
+    let (c0, t2): (bool, u64) = jet::full_add_64(c0, u1, t2);
+    let (c0, t3): (bool, u64) = jet::full_add_64(c0, u2, t3);
+    let (_, c2): (bool, u64) = jet::full_add_64(c0, u3, c2);
+
+    let (
+        (u0, u1, u2, u3), 
+        (t0, t1, t2, t3)
+    ): (
+        (u64, u64, u64, u64), 
+        (u64, u64, u64, u64)
+    ) = field_elem_q_inv_mul(c2, q0, q1, q2, q3, t0, t1, t2, t3);
+
+    // Process x0
+    let (u0, c1): (u64, u64) = <u128>::into(jet::full_multiply_64((x0, y3), (0, 0)));
+    let (c0, t0): (bool, u64) = jet::full_add_64(false, c1, t0);
+    let (u1, c1): (u64, u64) = <u128>::into(jet::full_multiply_64((x0, y2), (0, 0)));
+    let (c0, t1): (bool, u64) = jet::full_add_64(c0, c1, t1);
+    let (u2, c1): (u64, u64) = <u128>::into(jet::full_multiply_64((x0, y1), (0, 0)));
+    let (c0, t2): (bool, u64) = jet::full_add_64(c0, c1, t2);
+    let (u3, c1): (u64, u64) = <u128>::into(jet::full_multiply_64((x0, y0), (0, 0)));
+    let (c0, t3): (bool, u64) = jet::full_add_64(c0, c1, t3);
+
+    let (_, c2): (bool, u64) = jet::full_add_64(c0, 0, 0);
+    let (c0, t1): (bool, u64) = jet::full_add_64(false, u0, t1);
+    let (c0, t2): (bool, u64) = jet::full_add_64(c0, u1, t2);
+    let (c0, t3): (bool, u64) = jet::full_add_64(c0, u2, t3);
+    let (_, c2): (bool, u64) = jet::full_add_64(c0, u3, c2);
+
+    let (
+        (u0, u1, u2, u3), 
+        (t0, t1, t2, t3)
+    ): (
+        (u64, u64, u64, u64), 
+        (u64, u64, u64, u64)
+    ) = field_elem_q_inv_mul(c2, q0, q1, q2, q3, t0, t1, t2, t3);
+
+    match field_elem_smaller_then_modulus(((t3, t2, t1, t0), x_mod)) {
+        true => ((t0, t1, t2, t3), x_mod),
+        false => {
+            let (m0, m1, m2, m3): (u64, u64, u64, u64) = x_mod;
+            let (carry, s3): (bool, u64) = jet::full_subtract_64(false, t3, m3);
+            let (carry, s2): (bool, u64) = jet::full_subtract_64(carry, t2, m2);
+            let (carry, s1): (bool, u64) = jet::full_subtract_64(carry, t1, m1);
+            let (_, s0): (bool, u64) = jet::full_subtract_64(carry, t0, m0);
+
+            ((s0, s1, s2, s3), x_mod)
+        },
+    }
+}
+
 #ifdef TESTING
 
 fn test_field_elem_add_mod() {
@@ -255,7 +403,7 @@ fn test_field_elem_double_mod() {
     assert!(field_elem_eq(expected_3limb, actual_3limb));
 
     // Module overflow
-    let expected_overflow: FieldElement = fr_new(21888242871839275222246405745257275088696311157297823662689037894645226208583);
+    let expected_overflow: FieldElement = fr_new(21888242871839275222246405745257275088548364400416034343698204186575808495617);
     let actual_overflow: FieldElement = field_elem_double(fr_new(fr_mod()));
 
     let _: (u256, u256) = dbg!(field_elem_decompose(expected_overflow));
@@ -316,7 +464,7 @@ fn test_field_elem_neg() {
     assert!(field_elem_eq(actual_zero, expected_zero));
 
     // Only 1 limb is not zero
-    let expected_1limb: FieldElement = fr_new(21888242871839275222246405745257275088696311157297823662689037894645226208483);
+    let expected_1limb: FieldElement = fr_new(21888242871839275222246405745257275088548364400416034343698204186575808495517);
     let actual_1limb: FieldElement = field_elem_neg(fr_new(100));
 
     let _: (u256, u256) = dbg!(field_elem_decompose(expected_1limb));
@@ -325,7 +473,7 @@ fn test_field_elem_neg() {
     assert!(field_elem_eq(actual_1limb, expected_1limb));
 
     // 3 limbs are not zero
-    let expected_3limb: FieldElement = fr_new(21888242871839275222241838121800540664927277065104030182836558048955879819114);
+    let expected_3limb: FieldElement = fr_new(21888242871839275222241838121800540664779330308222240863845724340886462106148);
     let actual_3limb: FieldElement = field_elem_neg(fr_new(4567623456734423769034092193793479852479845689346389469));
 
     let _: (u256, u256) = dbg!(field_elem_decompose(expected_3limb));
