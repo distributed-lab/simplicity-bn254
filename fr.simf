@@ -1,0 +1,219 @@
+#include "field.simf"
+
+// q + r'.r = 1, i.e., qInvNeg = - q⁻¹ mod r
+// used for Montgomery reduction
+#define FR_Q_INV_NEG 14042775128853446655
+
+// rSquare where r is the Montgommery constant
+// see section 2.3.2 of Tolga Acar's thesis
+// https://www.microsoft.com/en-us/research/wp-content/uploads/1998/06/97Acar.pdf
+#define FR_R_SQUARE (150537098327114917, 10108755138030829701, 6052339484930628067, 1997599621687373223)
+
+// Fr prime field modulus. 
+//  - base 10: 21888242871839275222246405745257275088548364400416034343698204186575808495617
+//  - base 16: 0x30644E72E131A029B85045B68181585D2833E84879B9709143E1F593F0000001
+#define FR_MOD (3486998266802970665, 13281191951274694749, 2896914383306846353, 4891460686036598785)
+
+fn fr_add(x: FieldElement, y: FieldElement) -> FieldElement {
+    field_element_add(x, y, FR_MOD)
+}
+
+fn fr_double(x: FieldElement) -> FieldElement {
+    field_element_double(x, FR_MOD)
+}
+
+fn fr_sub(x: FieldElement, y: FieldElement) -> FieldElement {
+    field_element_sub(x, y, FR_MOD)
+}
+
+fn fr_neg(x: FieldElement) -> FieldElement {
+    field_element_neg(x, FR_MOD)
+}
+
+fn fr_mul(x: FieldElement, y: FieldElement) -> FieldElement {
+    field_element_mul(x, y, FR_MOD, FR_Q_INV_NEG)
+}
+
+fn fr_to_mont(x: FieldElement) -> FieldElement {
+    field_element_to_mont(x, FR_MOD, FR_R_SQUARE, FR_Q_INV_NEG)
+}
+
+fn fr_from_mont(x: FieldElement) -> FieldElement {
+    field_element_from_mont(x, FR_MOD, FR_Q_INV_NEG)
+}
+
+#ifdef TESTING
+
+fn test_fr_add() {
+    // Only 1 limb is not zero
+    let expected_1limb: FieldElement = field_element_new(200);
+    let actual_1limb: FieldElement = fr_add(field_element_new(100), field_element_new(100));
+
+    let _: u256 = dbg!(field_element_decompose(expected_1limb));
+    let _: u256 = dbg!(field_element_decompose(actual_1limb));
+
+    assert!(field_element_eq(actual_1limb, expected_1limb));
+
+    // 3 limbs are not zero
+    let expected_3limb: FieldElement = field_element_new(4567623456734502163058672543468019698188889198785079926);
+    let actual_3limb: FieldElement = fr_add(
+        field_element_new(4567623456734423769034092193793479852479845689346389469), 
+        field_element_new(78394024580349674539845709043509438690457)
+    );
+
+    let _: u256 = dbg!(field_element_decompose(expected_3limb));
+    let _: u256 = dbg!(field_element_decompose(actual_3limb));
+
+    assert!(field_element_eq(expected_3limb, actual_3limb));
+
+    // Module overflow
+    let expected_overflow: FieldElement = field_element_new(100);
+    let actual_overflow: FieldElement = fr_add(FR_MOD, field_element_new(100));
+
+    let _: u256 = dbg!(field_element_decompose(expected_overflow));
+    let _: u256 = dbg!(field_element_decompose(actual_overflow));
+
+    assert!(field_element_eq(expected_overflow, actual_overflow))   
+}
+
+fn test_fr_double() {
+    // Only 1 limb is not zero
+    let expected_1limb: FieldElement = field_element_new(200);
+    let actual_1limb: FieldElement = fr_double(field_element_new(100));
+
+
+    let _: u256 = dbg!(field_element_decompose(expected_1limb));
+    let _: u256 = dbg!(field_element_decompose(actual_1limb));
+
+    assert!(field_element_eq(actual_1limb, expected_1limb));
+
+    // 3 limbs are not zero
+    let expected_3limb: FieldElement = field_element_new(9135246913468847538068184387586959704959691378692778938);
+    let actual_3limb: FieldElement = fr_double(field_element_new(4567623456734423769034092193793479852479845689346389469));
+
+    let _: u256 = dbg!(field_element_decompose(expected_3limb));
+    let _: u256 = dbg!(field_element_decompose(actual_3limb));
+
+    assert!(field_element_eq(expected_3limb, actual_3limb));
+
+    // Module overflow
+    let expected_overflow: FieldElement = field_element_new(21888242871839275222246405745257275088548364400416034343698204186575808495615);
+    let actual_overflow: FieldElement = fr_double((3486998266802970665, 13281191951274694749, 2896914383306846353, 4891460686036598784));
+
+    let _: u256 = dbg!(field_element_decompose(expected_overflow));
+    let _: u256 = dbg!(field_element_decompose(actual_overflow));
+
+    assert!(field_element_eq(expected_overflow, actual_overflow))   
+}
+
+fn test_fr_sub() {
+    // Only 1 limb is not zero
+    let expected_1limb: FieldElement = field_element_new(100);
+    let actual_1limb: FieldElement = fr_sub(field_element_new(200), field_element_new(100));
+
+    let _: u256 = dbg!(field_element_decompose(expected_1limb));
+    let _: u256 = dbg!(field_element_decompose(actual_1limb));
+
+    assert!(field_element_eq(actual_1limb, expected_1limb));
+
+    // 3 limbs are not zero
+    let expected_3limb: FieldElement = field_element_new(4567623456734345375009511844118940006770802179907699012);
+    let actual_3limb: FieldElement = fr_sub(
+        field_element_new(4567623456734423769034092193793479852479845689346389469), 
+        field_element_new(78394024580349674539845709043509438690457)
+    );
+
+    let _: u256 = dbg!(field_element_decompose(expected_3limb));
+    let _: u256 = dbg!(field_element_decompose(actual_3limb));
+
+    assert!(field_element_eq(expected_3limb, actual_3limb));
+
+    // Module overflow
+    let expected_overflow: FieldElement = field_element_new(100);
+    let actual_overflow: FieldElement = fr_sub(field_element_new(100), FR_MOD);
+
+    let _: u256 = dbg!(field_element_decompose(expected_overflow));
+    let _: u256 = dbg!(field_element_decompose(actual_overflow));
+
+    assert!(field_element_eq(expected_overflow, actual_overflow))   
+}
+
+fn test_fr_neg() {
+    // Negate zero
+    let expected_zero: FieldElement = field_element_new(0);
+    let actual_zero: FieldElement = fr_neg(field_element_new(0));
+
+    let _: u256 = dbg!(field_element_decompose(expected_zero));
+    let _: u256 = dbg!(field_element_decompose(actual_zero));
+
+    assert!(field_element_eq(actual_zero, expected_zero));
+
+    // Only 1 limb is not zero
+    let expected_1limb: FieldElement = field_element_new(21888242871839275222246405745257275088548364400416034343698204186575808495517);
+    let actual_1limb: FieldElement = fr_neg(field_element_new(100));
+
+    let _: u256 = dbg!(field_element_decompose(expected_1limb));
+    let _: u256 = dbg!(field_element_decompose(actual_1limb));
+
+    assert!(field_element_eq(actual_1limb, expected_1limb));
+
+    // 3 limbs are not zero
+    let expected_3limb: FieldElement = field_element_new(21888242871839275222241838121800540664779330308222240863845724340886462106148);
+    let actual_3limb: FieldElement = fr_neg(field_element_new(4567623456734423769034092193793479852479845689346389469));
+
+    let _: u256 = dbg!(field_element_decompose(expected_3limb));
+    let _: u256 = dbg!(field_element_decompose(actual_3limb));
+
+    assert!(field_element_eq(expected_3limb, actual_3limb));
+}
+
+fn test_fr_mont() {
+    // Only 1 limb is not zero
+    let expected_1limb: FieldElement = field_element_new(100);
+    let actual_1limb: FieldElement = fr_from_mont(fr_to_mont(expected_1limb));
+
+    let _: FieldElement = dbg!(expected_1limb);
+    let _: FieldElement = dbg!(actual_1limb);
+
+    assert!(field_element_eq(actual_1limb, expected_1limb));
+
+    // 4 limbs are not zero (FR_MOD-1 used)
+    let expected_4limb: FieldElement = (3486998266802970665, 13281191951274694749, 2896914383306846353, 4891460686036598784);
+    let actual_4limb: FieldElement = fr_from_mont(fr_to_mont(expected_4limb));
+
+    let _: FieldElement = dbg!(expected_4limb);
+    let _: FieldElement = dbg!(actual_4limb);
+
+    assert!(field_element_eq(actual_4limb, expected_4limb));
+}
+
+fn test_fr_mul() {
+    // Only 1 limb is not zero
+    let expected_1limb: FieldElement = field_element_new(10000);
+    let actual_1limb: FieldElement = fr_from_mont(fr_mul(fr_to_mont(field_element_new(100)), fr_to_mont(field_element_new(100))));
+
+    let _: u256 = dbg!(field_element_decompose(expected_1limb));
+    let _: u256 = dbg!(field_element_decompose(actual_1limb));
+
+    assert!(field_element_eq(actual_1limb, expected_1limb));
+
+    // Two limbs are not zero and module overflow
+    let expected_2limb: FieldElement = field_element_new(4000000000000000000000);
+    let actual_2limb: FieldElement = fr_from_mont(fr_mul(fr_to_mont(field_element_new(2000000000000000000000)), fr_to_mont(field_element_new(2))));
+
+    let _: u256 = dbg!(field_element_decompose(expected_2limb));
+    let _: u256 = dbg!(field_element_decompose(actual_2limb));
+
+    assert!(field_element_eq(actual_2limb, expected_2limb));
+
+    // All limbs are not zero
+    let expected_4limb: FieldElement = field_element_new(917110295551321618512897515040388707124899077868094579263219511374664388868);
+    let actual_4limb: FieldElement = fr_from_mont(fr_mul(fr_to_mont(field_element_new(123456789012345678901234567890123456789012345678901234567890)), fr_to_mont(field_element_new(123456789012345678901234567890123456789012345678901234567890))));
+
+    let _: u256 = dbg!(field_element_decompose(expected_2limb));
+    let _: u256 = dbg!(field_element_decompose(actual_2limb));
+
+    assert!(field_element_eq(actual_2limb, expected_2limb));
+}
+
+#endif

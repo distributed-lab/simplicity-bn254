@@ -82,9 +82,9 @@ for file in $simf_files; do
         fi
         
         # Preprocess the file with mcpp, including src directory for dependencies
-        mcpp -P -DTESTING -I src "$temp_file" > "$preprocessed_file" 2>/dev/null
+        mcpp -P -DTESTING -I . "$temp_file" > "$preprocessed_file" 
         mcpp_exit=$?
-        
+                
         if [ $mcpp_exit -ne 0 ]; then
             printf "${RED}err${NC}\n"
             failed_tests+=("$test_name")

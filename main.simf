@@ -1,22 +1,6 @@
-#include "fp6.simf"
+#include "fp.simf"
 
 fn main() {
-    let a: FieldElement = fp_new(100);
-    let b: FieldElement = fp_new(100);
-    // let b: FieldElement = ((493319470278259999, 5164255478447964150, 13107472804851548667, 17522657719365597833), (0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF));
-    let ((r0, r1, r2, r3), _): FieldElement = field_elem_mul(a, b);
-    let _: u64 = dbg!(r0);
-    let _: u64 = dbg!(r1);
-    let _: u64 = dbg!(r2);
-    let _: u64 = dbg!(r3);
-
-// DBG: m0 = 490272669283594982
-// DBG: m1 = 887533887927284143
-
-// DBG: m0 = 980545338567189964
-// DBG: m1 = 1775067775854568286
-
-// DBG: m0 = 1470818007850784946
-// DBG: m1 = 2662601663781852429
+    let a: FieldElement = dbg!(field_element_new(21888242871839275222246405745257275088548364400416034343698204186575808495617));
 }
 
