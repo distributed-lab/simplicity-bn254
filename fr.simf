@@ -15,7 +15,7 @@
 #define FR_MOD (3486998266802970665, 13281191951274694749, 2896914383306846353, 4891460686036598785)
 
 // Fp prime field zero value.
-#define FP_ZERO (0,0,0,0)
+#define FR_ZERO (0,0,0,0)
 
 fn fr_add(x: FieldElement, y: FieldElement) -> FieldElement {
     field_element_add(x, y, FR_MOD)
