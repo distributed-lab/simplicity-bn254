@@ -1,6 +1,6 @@
-#include "fp.simf"
+#include "fp2.simf"
 
 fn main() {
-    let a: FieldElement = dbg!(field_element_new(21888242871839275222246405745257275088548364400416034343698204186575808495617));
+
 }
 

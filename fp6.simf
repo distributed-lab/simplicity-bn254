@@ -2,6 +2,10 @@
 
 type Fp6 = (Fp2, Fp2, Fp2);
 
+fn fp6_new(x: Fp2, y: Fp2, z: Fp2) -> Fp6 {
+    (x, y, z)
+}
+
 fn fp6_add(x: Fp6, y: Fp6) -> Fp6 {
     let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
     let (y0, y1, y2): (Fp2, Fp2, Fp2) = y;
@@ -46,6 +50,165 @@ fn fp6_eq(x: Fp6, y: Fp6) -> bool {
     <u1>::into(res)
 }
 
+fn fp6_mul(x: Fp6, y: Fp6) -> Fp6 {
+    let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
+    let (y0, y1, y2): (Fp2, Fp2, Fp2) = y;
+
+    let a_a: Fp2 = fp2_mul(x0, y0);
+    let b_b: Fp2 = fp2_mul(x1, y1);
+    let c_c: Fp2 = fp2_mul(x2, y2);
+
+    // Construct t1
+    let t1: Fp2 = fp2_add(y1, y2);
+
+    let tmp: Fp2 = fp2_add(x1, x2);
+    let t1: Fp2 = fp2_mul(t1, tmp);
+    let t1: Fp2 = fp2_sub(t1, b_b);
+    let t1: Fp2 = fp2_sub(t1, c_c);
+    let t1: Fp2 = fp2_mul_by_non_residue(t1);
+    let t1: Fp2 = fp2_add(t1, a_a);
+
+    // Construct t3
+    let t3: Fp2 = fp2_add(y0, y2);
+
+    let tmp: Fp2 = fp2_add(x0, x2);
+    let t3: Fp2 = fp2_mul(t3, tmp);
+    let t3: Fp2 = fp2_sub(t3, a_a);
+    let t3: Fp2 = fp2_add(t3, b_b);
+    let t3: Fp2 = fp2_sub(t3, c_c);
+
+    // Construct t2
+    let t2: Fp2 = fp2_add(y0, y1);
+
+    let tmp: Fp2 = fp2_add(x0, x1);
+    let t2: Fp2 = fp2_mul(t2, tmp);
+    let t2: Fp2 = fp2_sub(t2, a_a);
+    let t2: Fp2 = fp2_sub(t2, b_b);
+    let tmp: Fp2 = fp2_mul_by_non_residue(c_c);
+    let t2: Fp2 = fp2_add(t2, tmp);
+
+    let _: Fp2 = dbg!(t2);
+
+    (t1, t2, t3)
+}
+
+fn fp6_to_mont(x: Fp6) -> Fp6 {
+    let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
+
+    (fp2_to_mont(x0), fp2_to_mont(x1), fp2_to_mont(x2))
+}
+
+fn fp6_from_mont(x: Fp6) -> Fp6 {
+    let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
+
+    (fp2_from_mont(x0), fp2_from_mont(x1), fp2_from_mont(x2))
+}
+
+fn fp6_square(x: Fp6) -> Fp6 {
+    let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
+
+    let c4: Fp2 = fp2_mul(x0, x1);
+    let c4: Fp2 = fp2_double(c4);
+
+    let c5: Fp2 = fp2_square(x2);
+
+    let c1: Fp2 = fp2_mul_by_non_residue(c5);
+    let c1: Fp2 = fp2_add(c1, c4);
+
+    let c2: Fp2 = fp2_sub(c4, c5);
+    let c3: Fp2 = fp2_square(x0);
+
+    let c4: Fp2 = fp2_sub(x0, x1);
+    let c4: Fp2 = fp2_add(c4, x2);
+
+    let c5: Fp2 = fp2_mul(x1, x2);
+    let c5: Fp2 = fp2_double(c5);
+
+    let c4: Fp2 = fp2_square(c4);
+    
+    let x2: Fp2 = fp2_add(c2, c4);
+    let x2: Fp2 = fp2_add(x2, c5);
+    let x2: Fp2 = fp2_sub(x2, c3);
+
+    (((0, 0, 0, 0), (0, 0, 0, 0)), c1, x2)
+}
+
+fn fp6_mul_by_non_residue(x: Fp6) -> Fp6 {
+    let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
+
+    (fp2_mul_by_non_residue(x2), x0, x1)
+}
+
 #ifdef TESTING
+
+fn test_fp6_mul() {
+    let a: Fp6 = fp6_to_mont(fp6_new(fp2_new(1111, 2222), fp2_new(3333, 4444), fp2_new(5555, 6666)));
+    let b: Fp6 = fp6_to_mont(fp6_new(fp2_new(7777, 8888), fp2_new(9999, 0001), fp2_new(1111, 2222)));
+
+    let res_expected: Fp6 = fp6_new(
+        fp2_new(
+            18994539059416149496948254147945862858140679637304553260344968652738769779196, 
+            7523861215420076357440622908481836505221866752543322039533759453502235168854
+        ),
+        fp2_new(
+            10389867259421554270601919282280072425818954057834844129458841297308568367701, 
+            16742282475781589910221842547324055501183877257091419627944684924519851258285
+        ),
+        fp2_new(
+            20633428243252874142365682264601546434584718893634008881700764585869589937154, 
+            9655842462278884141141854417787099921886525452380092077591244418068065686675
+        )
+    );
+    let res_actual: Fp6 = fp6_mul(a, b);
+
+    assert!(fp6_eq(res_actual, res_expected))
+}
+
+fn test_fp6_square() {
+    let a: Fp6 = fp6_to_mont(fp6_new(fp2_new(1111, 2222), fp2_new(3333, 4444), fp2_new(5555, 6666)));
+
+    let res_expected: Fp6 = fp6_new(
+        fp2_new(
+            0, 
+            0
+        ),
+        fp2_new(
+            5077267240326481774978371322300791103706041119414132587251627869187856826813, 
+            3710924100992239291167535149804737265692354828284625449576013085091845506619
+        ),
+        fp2_new(
+            12416879960853432914195081186903719800291072064034312057023589548317518215054, 
+            3368724890789637599223793077018872347050993091404873952418824362228661774161
+        )
+    );
+    let res_actual: Fp6 = fp6_square(a);
+
+    assert!(fp6_eq(res_actual, res_expected))
+}
+
+fn test_fp6_mul_by_non_residue() {
+    let a: Fp6 = fp6_to_mont(fp6_new(fp2_new(1111, 2222), fp2_new(3333, 4444), fp2_new(5555, 6666)));
+
+    let res_expected: Fp6 = fp6_new(
+        fp2_new(
+            19956452162122165475070136546792643721507346362050598727147419867823542226016, 
+            1006206364860652601854486089933017306582698850807653703637635940513775089452
+        ),
+        fp2_new(
+            7807784858872634445237779775259928714732292087356982213900125961492602126605, 
+            15615569717745268890475559550519857429464584174713964427800251922985204253210
+        ),
+        fp2_new(
+            1535111704778628113466933580522511055500565104773122979011339989832580171232, 
+            9342896563651262558704713355782439770232857192130105192911465951325182297837
+        )
+    );
+    let res_actual: Fp6 = fp6_mul_by_non_residue(a);
+
+    let _: Fp6 = dbg!(res_expected);
+    let _: Fp6 = dbg!(res_actual);
+
+    assert!(fp6_eq(res_actual, res_expected))
+}
 
 #endif

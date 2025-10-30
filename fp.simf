@@ -42,6 +42,10 @@ fn fp_from_mont(x: FieldElement) -> FieldElement {
     field_element_from_mont(x, FP_MOD, FP_Q_INV_NEG)
 }
 
+fn fp_eq(x: FieldElement, y: FieldElement) -> bool {
+    field_element_eq(x, y)
+}
+
 #ifdef TESTING
 
 fn test_fp_add() {
