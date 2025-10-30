@@ -1,0 +1,116 @@
+type G1 = (FieldElement, FieldElement, FieldElement);
+
+fn g1_zero() -> G1 {
+    (FP_ZERO, FP_ZERO, FP_ZERO)
+}
+
+fn g1_is_zero(a: G1) -> bool {
+    let (ax, ay, az): (FieldElement, FieldElement, FieldElement) = a;
+    field_element_is_zero(az)
+}
+
+// Returns true if value point a is equal to point b in Jacobian coordinates.
+fn g1_eq(a: G1, b: G1) -> bool {
+    let (ax, ay, az): (FieldElement, FieldElement, FieldElement) = a;
+    let (bx, by, bz): (FieldElement, FieldElement, FieldElement) = b;
+
+
+    let az_is_zero: bool = field_element_is_zero(az);
+    let bz_is_zero: bool = field_element_is_zero(bz);
+
+    match jet::and_1(jet::complement_1(az_is_zero), jet::complement_1(bz_is_zero)) {
+        true => {
+            let az2: FieldElement = fp_square(az);
+            let az3: FieldElement = fp_mul(az2, az);
+
+            let bz2: FieldElement = fp_square(bz);
+            let bz3: FieldElement = fp_mul(bz2, bz);
+
+            jet::and_1(fp_eq(fp_mul(ax, bz2), fp_mul(bx, az2)), fp_eq(fp_mul(ay, bz3), fp_mul(by, az3)))
+        },
+        false => {
+             jet::and_1(az_is_zero, bz_is_zero)
+        },
+    }
+}
+
+fn g1_negate(a: G1) -> G1 {
+    let (ax, ay, az): (FieldElement, FieldElement, FieldElement) = a;
+    (ax, fp_neg(ay), az)
+}
+
+
+// Following gnark-crypto which itself follows
+// https://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
+fn g1_double(a: G1) -> G1 {
+    let (ax, ay, az): (FieldElement, FieldElement, FieldElement) = a;
+
+    let A: FieldElement = fp_square(ax);
+    let B: FieldElement = fp_square(ay);
+    let C: FieldElement = fp_square(B);
+    let D: FieldElement = fp_double(fp_sub(fp_sub(fp_square(fp_add(ax, B)), A), C));
+
+    let E: FieldElement = fp_add(fp_double(A), A);
+    let F: FieldElement = fp_square(E);
+    let t: FieldElement = fp_double(D);
+
+    let bz: FieldElement = fp_double(fp_mul(ay, az));
+
+    let bx: FieldElement = fp_sub(F, t);
+
+    let by: FieldElement = fp_mul(fp_sub(D, bx), E);
+    let by: FieldElement = fp_sub(by, fp_double(fp_double(fp_double(C))));
+
+    (bx, by, bz)
+}
+
+// Following gnark-crypto which itself follows
+// https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl
+fn g1_add(q: G1, p: G1) -> G1 {
+    // TODO do we need to check the zero equality?
+
+    let (qx, qy, qz): (FieldElement, FieldElement, FieldElement) = q;
+    let (px, py, pz): (FieldElement, FieldElement, FieldElement) = p;
+
+    let Z1Z1: FieldElement = fp_square(qz);
+    let Z2Z2: FieldElement = fp_square(pz);
+    let U1: FieldElement = fp_mul(qx, Z2Z2);
+    let U2: FieldElement = fp_mul(px, Z1Z1);
+    let S1: FieldElement = fp_mul(fp_mul(qy, pz), Z2Z2);
+    let S2: FieldElement = fp_mul(fp_mul(py, qz), Z1Z1);
+
+
+    // TODO: Check if we really need this.
+    // Probably, while we do not care about the speed, 
+    // such conditional execution will only increase the program size.
+    // match jet::and_1(fp_eq(U1, U2), fp_eq(S1, S2)) {
+    //     true => g1_double(p),
+    //     false => {
+            
+    //     }
+    // }
+
+    let H: FieldElement = fp_sub(U2, U1);
+    let I: FieldElement = fp_square(fp_double(H));
+    let J: FieldElement = fp_mul(H, I);
+    let r: FieldElement = fp_double(fp_sub(S2, S1));
+    let V: FieldElement = fp_mul(U1, I);
+
+    let rx: FieldElement = fp_sub(fp_sub(fp_sub(fp_square(r), J), V), V);
+
+    let ry: FieldElement = fp_mul(fp_sub(V, rx), r);
+    let S1: FieldElement = fp_double(fp_mul(S1, J));
+    let ry: FieldElement = fp_sub(ry, S1);
+
+    let rz: FieldElement = fp_mul(fp_sub(fp_sub(fp_square(p_add(pz, qz)), Z1Z1), Z2Z2), H);
+
+    (rx, ry, rz)
+}
+
+fn g1_sub(a: G1, b: G1) -> G1 {
+    g1_add(a, g1_negate(b))
+}
+
+fn g1_scalar_mul(a: G1, s: FieldElement) -> G1 {
+    // TODO
+}
