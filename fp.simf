@@ -14,6 +14,9 @@
 //  - base 16: 0x30644E72E131A029B85045B68181585D97816A916871CA8D3C208C16D87CFD47
 #define FP_MOD (3486998266802970665, 13281191951274694749, 10917124144477883021, 4332616871279656263)
 
+// Fp prime field zero value.
+#define FP_ZERO (0,0,0,0)
+
 fn fp_add(x: FieldElement, y: FieldElement) -> FieldElement {
     field_element_add(x, y, FP_MOD)
 }
@@ -32,6 +35,10 @@ fn fp_neg(x: FieldElement) -> FieldElement {
 
 fn fp_mul(x: FieldElement, y: FieldElement) -> FieldElement {
     field_element_mul(x, y, FP_MOD, FP_Q_INV_NEG)
+}
+
+fn fp_square(x: FieldElement) -> FieldElement {
+    fp_mul(x, x)
 }
 
 fn fp_to_mont(x: FieldElement) -> FieldElement {
