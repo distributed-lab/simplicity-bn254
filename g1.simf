@@ -120,21 +120,21 @@ fn g1_scalar_mul(p: G1, s: FieldElement) -> G1 {
     // Moving MSB -> LSB
 
     let s1bits: [u1, 64] = <u64>::into(s1);
-    let (res, p): (G1, G1) = array_fold::<bit_iterate, 64>(s1bits, (g1_zero(), p));
+    let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s1bits, (g1_zero(), p));
 
     let s2bits: [u1, 64] = <u64>::into(s2);
-    let (res, p): (G1, G1) = array_fold::<bit_iterate, 64>(s2bits, (res, p));
+    let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s2bits, (res, p));
 
     let s3bits: [u1, 64] = <u64>::into(s3);
-    let (res, p): (G1, G1) = array_fold::<bit_iterate, 64>(s3bits, (res, p));
+    let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s3bits, (res, p));
 
     let s4bits: [u1, 64] = <u64>::into(s4);
-    let (res, p): (G1, G1) = array_fold::<bit_iterate, 64>(s4bits, (res, p));
+    let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s4bits, (res, p));
     
     res
 }
 
-fn bit_iterate(bit: u1, ctx: (G1, G1)) -> (G1, G1) {
+fn g1_scalar_mul_bit_iterate(bit: u1, ctx: (G1, G1)) -> (G1, G1) {
     let (sum, p): (G1, G1) = ctx;
     let sum: G1 = g1_double(sum)
     match bit {
