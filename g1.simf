@@ -1,10 +1,8 @@
 #include "fr.simf"
 
-type G1 = (FieldElement, FieldElement, FieldElement);
+#define G1_ZERO (FP_ZERO, FP_ZERO, FP_ZERO)
 
-fn g1_zero() -> G1 {
-    (FP_ZERO, FP_ZERO, FP_ZERO)
-}
+type G1 = (FieldElement, FieldElement, FieldElement);
 
 fn g1_is_zero(a: G1) -> bool {
     let (ax, ay, az): (FieldElement, FieldElement, FieldElement) = a;
@@ -72,8 +70,6 @@ fn g1_double(a: G1) -> G1 {
 // Following gnark-crypto which itself follows
 // https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl
 fn g1_add(q: G1, p: G1) -> G1 {
-    // TODO do we need to check the zero equality?
-
     let (qx, qy, qz): (FieldElement, FieldElement, FieldElement) = q;
     let (px, py, pz): (FieldElement, FieldElement, FieldElement) = p;
 
@@ -109,25 +105,57 @@ fn g1_add(q: G1, p: G1) -> G1 {
 
     let rz: FieldElement = fp_mul(fp_sub(fp_sub(fp_square(fp_add(pz, qz)), Z1Z1), Z2Z2), H);
 
-    (rx, ry, rz)
+    // Check one was zero -> the result is zero.
+    let p_is_zero: u1 = <bool>::into(g1_is_zero(p));
+    let q_is_zero: u1 = <bool>::into(g1_is_zero(q));
+    let check_bit: u1 = jet::xor_1(p_is_zero, q_is_zero);
+
+    match jet::some_1(check_bit) {
+        true => match g1_is_zero(p) {
+                true => q,
+                false => p,
+            },
+        false => (rx, ry, rz),
+    }
 }
 
 fn g1_sub(a: G1, b: G1) -> G1 {
     g1_add(a, g1_negate(b))
 }
 
-fn g1_scalar_mul_bit_iterate(bit: u1, ctx: (G1, G1)) -> (G1, G1) {
-    let (sum, p): (G1, G1) = ctx;
-    let sum: G1 = g1_double(sum);
-    match <u1>::into(bit) {
-        true => {
-            (sum, p)
-        },
+fn g1_scalar_mul_bit_iterate(acc: (u64, G1), ctx: (u64, G1), i: u8) -> Either<G1, (u64, G1)> {
+    let (bitmask, sum): (u64, G1) = acc;
+    
+    match jet::eq_8(i, 64) {
+        true => Left(sum),
         false => {
-            (g1_add(sum, p), p)
+            let (value, p): (u64, G1) = ctx;
+
+            let sum: G1 = g1_double(sum);
+            let sum: G1 = match jet::some_64(jet::and_64(value, bitmask)) {
+                true => g1_add(p, sum),
+                false => sum,
+            };
+
+            let bitmask: u64 =  jet::right_shift_64(1, bitmask);
+            Right((bitmask, sum))
         }
     }
 }
+
+// TODO: Use after array_fold will be fixed
+// fn g1_scalar_mul_bit_iterate(bit: u1, ctx: (G1, G1)) -> (G1, G1) {
+//     let (sum, p): (G1, G1) = ctx;
+//     let sum: G1 = g1_double(sum);
+//     match <u1>::into(bit) {
+//         true => {
+//             (sum, p)
+//         },
+//         false => {
+//             (g1_add(sum, p), p)
+//         }
+//     }
+// }
 
 // Multiply point by scalar. Uses fast exponention idea. 
 // It is sssumed that scalar is in the Montgomery form.
@@ -137,18 +165,32 @@ fn g1_scalar_mul(p: G1, s: FieldElement) -> G1 {
 
     // Moving MSB -> LSB
 
-    let s1bits: [u1; 64] = <u64>::into(s1);
-    let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s1bits, (g1_zero(), p));
+    let bitmask: u64 = 9223372036854775808; // 2^63
+   
+    let out: Either<G1, (u64, G1)> = for_while::<g1_scalar_mul_bit_iterate>((bitmask, G1_ZERO), (s1, p));
+    let res: G1 = unwrap_left::<(u64, G1)>(out);
 
-    let s2bits: [u1; 64] = <u64>::into(s2);
-    let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s2bits, (res, p));
+    let out: Either<G1, (u64, G1)> = for_while::<g1_scalar_mul_bit_iterate>((bitmask, res), (s2, p));
+    let res: G1 = unwrap_left::<(u64, G1)>(out);
 
-    let s3bits: [u1; 64] = <u64>::into(s3);
-    let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s3bits, (res, p));
+    let out: Either<G1, (u64, G1)> = for_while::<g1_scalar_mul_bit_iterate>((bitmask, res), (s3, p));
+    let res: G1 = unwrap_left::<(u64, G1)>(out);
 
-    let s4bits: [u1; 64] = <u64>::into(s4);
-    let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s4bits, (res, p));
-    
+    let out: Either<G1, (u64, G1)> = for_while::<g1_scalar_mul_bit_iterate>((bitmask, res), (s4, p));
+    let res: G1 = unwrap_left::<(u64, G1)>(out);
+
+
+    // TODO: Use after array_fold will be fixed
+    // let s1bits: [u1; 64] = <u64>::into(s1);
+    // let s2bits: [u1; 64] = <u64>::into(s2);
+    // let s3bits: [u1; 64] = <u64>::into(s3);
+    // let s4bits: [u1; 64] = <u64>::into(s4);
+
+    // let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s1bits, (g1_zero(), p));
+    // let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s2bits, (res, p));
+    // let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s3bits, (res, p));
+    // let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s4bits, (res, p));
+
     res
 }
 
@@ -166,6 +208,7 @@ fn test_g1_equal() {
     let a: G1 = (ax,ay,az);
     let b: G1 = (bx,by,bz);
 
+    // Positive case
     assert!(g1_eq(a,b));
 
     let cx: FieldElement = (1799272946717626621, 4692510101642634287, 7744477234110802071, 9226155861685280021);
@@ -174,6 +217,7 @@ fn test_g1_equal() {
 
     let c: G1 = (cx,cy,cz);
     
+    // Negative case
     assert!(<u1>::into(jet::complement_1(<bool>::into(g1_eq(a,c)))))
 }
 
@@ -205,6 +249,63 @@ fn test_g1_double() {
     let b: G1 = (bx,by,bz);
 
     assert!(g1_eq(b,g1_double(a)))
+}
+
+fn test_g1_add() {
+    let ax: FieldElement = (2660290123357522574, 7623207791470518540, 5314868706973180553, 10722157497460808825);
+    let ay: FieldElement = (2482923816546699733, 4903284613741271418, 16471778726647404852, 16098156220303574542);
+    let az: FieldElement = (2848318405948801671, 6136696105659101695, 3335757777677701823, 15528660411355722902);
+
+    let bx: FieldElement = (1799272946717626621, 4692510101642634287, 7744477234110802071, 9226155861685280021);
+    let by: FieldElement = (1749827502192827435, 14295353047236301223, 12522662654711884246, 8278769098901179243);
+    let bz: FieldElement = (1016462830313374142, 7942765140776706759, 3726500310570118390, 3359969918945609066);
+
+    let cx: FieldElement = (3296011478758750661, 2232241089618318414, 2644202556232408900, 7023735439380818562);
+    let cy: FieldElement = (1030134179182784641, 16985795282495964893, 3666172556850324613, 5913045283971992298);
+    let cz: FieldElement = (332529847929956065, 2131290511102697284, 11081050984592835895, 15870921621001340247);
+
+    let a: G1 = (ax,ay,az);
+    let b: G1 = (bx,by,bz);
+    let c: G1 = (cx,cy,cz);
+
+    assert!(g1_eq(c,g1_add(a,b)))
+}
+
+fn test_g1_sub() {
+    let ax: FieldElement = (2660290123357522574, 7623207791470518540, 5314868706973180553, 10722157497460808825);
+    let ay: FieldElement = (2482923816546699733, 4903284613741271418, 16471778726647404852, 16098156220303574542);
+    let az: FieldElement = (2848318405948801671, 6136696105659101695, 3335757777677701823, 15528660411355722902);
+
+    let bx: FieldElement = (1799272946717626621, 4692510101642634287, 7744477234110802071, 9226155861685280021);
+    let by: FieldElement = (1749827502192827435, 14295353047236301223, 12522662654711884246, 8278769098901179243);
+    let bz: FieldElement = (1016462830313374142, 7942765140776706759, 3726500310570118390, 3359969918945609066);
+
+    let cx: FieldElement = (2825618280294913217, 17051917327196537472, 17855004258017894816, 7362453744530414763);
+    let cy: FieldElement = (2082633700048434204, 8708152578043592011, 15725417330218119402, 1682273953365550884);
+    let cz: FieldElement = (332529847929956065, 2131290511102697284, 11081050984592835895, 15870921621001340247);
+
+    let a: G1 = (ax,ay,az);
+    let b: G1 = (bx,by,bz);
+    let c: G1 = (cx,cy,cz);
+
+    assert!(g1_eq(c,g1_sub(a,b)))
+}
+
+fn test_g1_scalar_mul() {
+    let ax: FieldElement = (2660290123357522574, 7623207791470518540, 5314868706973180553, 10722157497460808825);
+    let ay: FieldElement = (2482923816546699733, 4903284613741271418, 16471778726647404852, 16098156220303574542);
+    let az: FieldElement = (2848318405948801671, 6136696105659101695, 3335757777677701823, 15528660411355722902);
+
+    let bx: FieldElement = (1460754970256339063, 11522904038210750546, 12388473599286100388, 15560025014215772694);
+    let by: FieldElement = (1059736919713468860, 17795546203218610017, 1419927517949621271, 11963876874714788696);
+    let bz: FieldElement = (178665879387944578, 15276313865707422694, 13312649632310220038, 10319392619434606745);
+
+    let s: FieldElement = (2857349737473234414, 1006478916336862503, 179601115998768486, 16282954260033330256); // Fr element
+    
+    let a: G1 = (ax,ay,az);
+    let b: G1 = (bx,by,bz);
+
+    assert!(g1_eq(b,g1_scalar_mul(a,s)))
 }
 
 #endif
