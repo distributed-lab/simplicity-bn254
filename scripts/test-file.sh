@@ -23,7 +23,6 @@ cat ./tmp/${base_name}_defines.simf ./tmp/${base_name}_compiled0.simf ./tmp/${ba
 
 mkdir ./target/${base_name}
 
-
 # apply define for tests
 mcpp -P -I . -DTESTING ./tmp/${base_name}_compiled1.simf > ./target/${base_name}/${base_name}.simf 
 
