@@ -1,3 +1,5 @@
+#include "fr.simf"
+
 type G1 = (FieldElement, FieldElement, FieldElement);
 
 fn g1_zero() -> G1 {
@@ -15,10 +17,10 @@ fn g1_eq(a: G1, b: G1) -> bool {
     let (bx, by, bz): (FieldElement, FieldElement, FieldElement) = b;
 
 
-    let az_is_zero: bool = field_element_is_zero(az);
-    let bz_is_zero: bool = field_element_is_zero(bz);
+    let az_is_zero: u1 = <bool>::into(field_element_is_zero(az));
+    let bz_is_zero: u1 = <bool>::into(field_element_is_zero(bz));
 
-    match jet::and_1(jet::complement_1(az_is_zero), jet::complement_1(bz_is_zero)) {
+    match <u1>::into(jet::and_1(jet::complement_1(az_is_zero), jet::complement_1(bz_is_zero))) {
         true => {
             let az2: FieldElement = fp_square(az);
             let az3: FieldElement = fp_mul(az2, az);
@@ -26,10 +28,13 @@ fn g1_eq(a: G1, b: G1) -> bool {
             let bz2: FieldElement = fp_square(bz);
             let bz3: FieldElement = fp_mul(bz2, bz);
 
-            jet::and_1(fp_eq(fp_mul(ax, bz2), fp_mul(bx, az2)), fp_eq(fp_mul(ay, bz3), fp_mul(by, az3)))
+            let eql: u1 = <bool>::into(fp_eq(fp_mul(ax, bz2), fp_mul(bx, az2)));
+            let eqr: u1 = <bool>::into(fp_eq(fp_mul(ay, bz3), fp_mul(by, az3)));
+
+            <u1>::into(jet::and_1(eql, eqr))
         },
         false => {
-             jet::and_1(az_is_zero, bz_is_zero)
+             <u1>::into(jet::and_1(az_is_zero, bz_is_zero))
         },
     }
 }
@@ -102,13 +107,26 @@ fn g1_add(q: G1, p: G1) -> G1 {
     let S1: FieldElement = fp_double(fp_mul(S1, J));
     let ry: FieldElement = fp_sub(ry, S1);
 
-    let rz: FieldElement = fp_mul(fp_sub(fp_sub(fp_square(p_add(pz, qz)), Z1Z1), Z2Z2), H);
+    let rz: FieldElement = fp_mul(fp_sub(fp_sub(fp_square(fp_add(pz, qz)), Z1Z1), Z2Z2), H);
 
     (rx, ry, rz)
 }
 
 fn g1_sub(a: G1, b: G1) -> G1 {
     g1_add(a, g1_negate(b))
+}
+
+fn g1_scalar_mul_bit_iterate(bit: u1, ctx: (G1, G1)) -> (G1, G1) {
+    let (sum, p): (G1, G1) = ctx;
+    let sum: G1 = g1_double(sum);
+    match <u1>::into(bit) {
+        true => {
+            (sum, p)
+        },
+        false => {
+            (g1_add(sum, p), p)
+        }
+    }
 }
 
 // Multiply point by scalar. Uses fast exponention idea. 
@@ -119,30 +137,36 @@ fn g1_scalar_mul(p: G1, s: FieldElement) -> G1 {
 
     // Moving MSB -> LSB
 
-    let s1bits: [u1, 64] = <u64>::into(s1);
+    let s1bits: [u1; 64] = <u64>::into(s1);
     let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s1bits, (g1_zero(), p));
 
-    let s2bits: [u1, 64] = <u64>::into(s2);
+    let s2bits: [u1; 64] = <u64>::into(s2);
     let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s2bits, (res, p));
 
-    let s3bits: [u1, 64] = <u64>::into(s3);
+    let s3bits: [u1; 64] = <u64>::into(s3);
     let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s3bits, (res, p));
 
-    let s4bits: [u1, 64] = <u64>::into(s4);
+    let s4bits: [u1; 64] = <u64>::into(s4);
     let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s4bits, (res, p));
     
     res
 }
 
-fn g1_scalar_mul_bit_iterate(bit: u1, ctx: (G1, G1)) -> (G1, G1) {
-    let (sum, p): (G1, G1) = ctx;
-    let sum: G1 = g1_double(sum)
-    match bit {
-        0 => {
-            (sum, p)
-        },
-        1 => {
-            (g1_add(sum, p), p)
-        }
-    }
+#ifdef TESTING
+
+fn test_g1_equal() {
+    let ax: FieldElement = (2660290123357522574, 7623207791470518540, 5314868706973180553, 10722157497460808825);
+    let ay: FieldElement = (2482923816546699733, 4903284613741271418, 16471778726647404852, 16098156220303574542);
+    let az: FieldElement = (2848318405948801671, 6136696105659101695, 3335757777677701823, 15528660411355722902);
+
+    let bx: FieldElement = (2660290123357522574, 7623207791470518540, 5314868706973180553, 10722157497460808825);
+    let by: FieldElement = (2482923816546699733, 4903284613741271418, 16471778726647404852, 16098156220303574542);
+    let bz: FieldElement = (2848318405948801671, 6136696105659101695, 3335757777677701823, 15528660411355722902);
+
+    let a: G1 = (ax,ay,az);
+    let b: G1 = (bx,by,bz);
+
+    assert!(g1_eq(a,b))
 }
+
+#endif
