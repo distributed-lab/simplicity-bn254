@@ -3,14 +3,16 @@
 An implementation of zk-friendly [bn254](https://neuromancer.sk/std/bn/bn254) curve using SimplicityHL language.
 
 ## Usage
-Use `simply` compiler as [described](https://docs.simplicity-lang.org/getting-started/cli/#overview). To install
+Use `simply` CLI to compile as [recommended](https://docs.simplicity-lang.org/getting-started/cli/#overview). To install execute:
 ```shell
 cargo install --git https://github.com/starkware-bitcoin/simply simply
 ```
 PS. It is recommended to use [olegfomenko/simply](https://github.com/olegfomenko/simply/tree/feature/bump-simplicity-versions) fork.
 
-Use `make` to execute the following commands:
-- `make debug` - builds the whole project into one file removing all test functions. Executes the project in debug mode. The result is in `target` directory;
+You may also need to install `mcpp`:
+```shell
+brew install mcpp
+```
 
 ## Testing
 - `make test all` - takes only functions within `TESTING` macros that start from `test`. Executes them one by one;
