@@ -14,6 +14,12 @@ You may also need to install `mcpp`:
 brew install mcpp
 ```
 
+To build the program (in `main.simf`) execute:
+```shell
+make build
+```
+It will generate a `main.simf` filed with imported includes inside the 'target' package as well as a `target.json` file with built program.
+
 ## Testing
 - `make test all` - takes only functions within `TESTING` macros that start from `test`. Executes them one by one;
 - `make test file name=NAME` - takes only functions within `TESTING` macros that start from `test` in the specified file. "NAME" can be a name of any SimplicityHL file in the root without ".simf" prefix.
