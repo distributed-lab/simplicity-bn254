@@ -7,7 +7,6 @@ Use `simply` CLI to compile as [recommended](https://docs.simplicity-lang.org/ge
 ```shell
 cargo install --git https://github.com/starkware-bitcoin/simply simply
 ```
-PS. It is recommended to use [olegfomenko/simply](https://github.com/olegfomenko/simply/tree/feature/bump-simplicity-versions) fork.
 
 You may also need to install `mcpp`:
 ```shell
