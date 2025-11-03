@@ -1,0 +1,590 @@
+#include "fp6.simf"
+
+type Fp12 = (Fp6, Fp6);
+
+fn fp12_new(x: Fp6, y: Fp6) -> Fp12 {
+    (x, y)
+}
+
+fn fp12_add(x: Fp12, y: Fp12) -> Fp12 {
+    let (x0, x1): (Fp6, Fp6) = x;
+    let (y0, y1): (Fp6, Fp6) = y;
+
+    (fp6_add(x0, y0), fp6_add(x1, y1))
+}
+
+fn fp12_sub(x: Fp12, y: Fp12) -> Fp12 {
+    let (x0, x1): (Fp6, Fp6) = x;
+    let (y0, y1): (Fp6, Fp6) = y;
+
+    (fp6_sub(x0, y0), fp6_sub(x1, y1))
+}
+
+fn fp12_to_mont(x: Fp12) -> Fp12 {
+    let (x0, x1): (Fp6, Fp6) = x;
+
+    (fp6_to_mont(x0), fp6_to_mont(x1))
+}
+
+fn fp12_from_mont(x: Fp12) -> Fp12 {
+    let (x0, x1): (Fp6, Fp6) = x;
+
+    (fp6_from_mont(x0), fp6_from_mont(x1))
+}
+
+fn fp12_mul(x: Fp12, y: Fp12) -> Fp12 {
+    let (x0, x1): (Fp6, Fp6) = x;
+    let (y0, y1): (Fp6, Fp6) = y;
+
+    let t0: Fp6 = fp6_mul(x0, y0);
+    let t1: Fp6 = fp6_mul(x1, y1);
+    let t2: Fp6 = fp6_add(y0, y1);
+
+    let c1: Fp6 = fp6_add(x1, x0);
+    let c1: Fp6 = fp6_mul(c1, t2);
+    let c1: Fp6 = fp6_sub(c1, t0);
+    let c1: Fp6 = fp6_sub(c1, t1);
+
+    let t1: Fp6 = fp6_mul_by_non_residue(t1);
+    let c0: Fp6 = fp6_add(t0, t1);
+
+    (c0, c1)
+}
+
+fn fp12_eq(x: Fp12, y: Fp12) -> bool {
+    let (x0, x1): (Fp6, Fp6) = x;
+    let (y0, y1): (Fp6, Fp6) = y;
+
+    let res: u1 = jet::and_1(
+        <bool>::into(fp6_eq(x0, y0)),
+        <bool>::into(fp6_eq(x1, y1))
+    );
+
+    <u1>::into(res)
+}
+
+fn fp12_double(x: Fp12) -> Fp12 {
+    let (x0, x1): (Fp6, Fp6) = x;
+
+    (fp6_double(x0), fp6_double(x1))
+}
+
+fn fp12_neg(x: Fp12) -> Fp12 {
+    let (x0, x1): (Fp6, Fp6) = x;
+
+    (fp6_neg(x0), fp6_neg(x1))
+}
+
+fn fp12_conjugate(x: Fp12) -> Fp12 {
+    let (x0, x1): (Fp6, Fp6) = x;
+
+    (x0, fp6_neg(x1))
+}
+
+fn fp12_square(x: Fp12) -> Fp12 {
+    let (x0, x1): (Fp6, Fp6) = x;
+
+    let ab: Fp6 = fp6_mul(x0, x1);
+    let c0c1: Fp6 = fp6_add(x0, x1);
+    let c0: Fp6 = fp6_mul_by_non_residue(x1);
+    let c0: Fp6 = fp6_add(c0, x0);
+    let c0: Fp6 = fp6_mul(c0, c0c1);
+    let c0: Fp6 = fp6_sub(c0, ab);
+
+    let c1: Fp6 = fp6_add(ab, ab);
+    let tmp: Fp6 = fp6_mul_by_non_residue(ab);
+    let c0: Fp6 = fp6_sub(c0, tmp);
+
+    (c0, c1)
+}
+
+fn fp12_frobenius(x: Fp12) -> Fp12 {
+    let ((x0, x1, x2), (x3, x4, x5)): ((Fp2, Fp2, Fp2), (Fp2, Fp2, Fp2)) = x;
+
+    let t0: Fp2 = fp2_conjugate(x0);
+    let t1: Fp2 = mul_by_non_residue_1_power_2(fp2_conjugate(x1));
+    let t2: Fp2 = mul_by_non_residue_1_power_4(fp2_conjugate(x2));
+    let t3: Fp2 = mul_by_non_residue_1_power_1(fp2_conjugate(x3));
+    let t4: Fp2 = mul_by_non_residue_1_power_3(fp2_conjugate(x4));
+    let t5: Fp2 = mul_by_non_residue_1_power_5(fp2_conjugate(x5));
+
+    (
+        (t0, t1, t2),
+        (t3, t4, t5)
+    )
+}
+
+fn fp12_frobenius_square(x: Fp12) -> Fp12 {
+    let ((x0, x1, x2), (x3, x4, x5)): ((Fp2, Fp2, Fp2), (Fp2, Fp2, Fp2)) = x;
+
+    let x1: Fp2 = mul_by_non_residue_2_power_2(x1);
+    let x2: Fp2 = mul_by_non_residue_2_power_4(x2);
+    let x3: Fp2 = mul_by_non_residue_2_power_1(x3);
+    let x4: Fp2 = mul_by_non_residue_2_power_3(x4);
+    let x5: Fp2 = mul_by_non_residue_2_power_5(x5);
+
+    ((x0, x1, x2), (x3, x4, x5))
+}
+
+fn fp12_frobenius_cube(x: Fp12) -> Fp12 {
+    let ((x0, x1, x2), (x3, x4, x5)): ((Fp2, Fp2, Fp2), (Fp2, Fp2, Fp2)) = x;
+
+    let t0: Fp2 = fp2_conjugate(x0);
+    let t1: Fp2 = mul_by_non_residue_3_power_2(fp2_conjugate(x1));
+    let t2: Fp2 = mul_by_non_residue_3_power_4(fp2_conjugate(x2));
+    let t3: Fp2 = mul_by_non_residue_3_power_1(fp2_conjugate(x3));
+    let t4: Fp2 = mul_by_non_residue_3_power_3(fp2_conjugate(x4));
+    let t5: Fp2 = mul_by_non_residue_3_power_5(fp2_conjugate(x5));
+
+    (
+        (t0, t1, t2),
+        (t3, t4, t5)
+    )
+}
+
+fn fp12_cyclotomic_square(x: Fp12) -> Fp12 {
+    let ((x0, x1, x2), (x3, x4, x5)): ((Fp2, Fp2, Fp2), (Fp2, Fp2, Fp2)) = x;
+
+    let t0: Fp2 = fp2_square(x4);
+    let t1: Fp2 = fp2_square(x0);
+
+    let t6: Fp2 = fp2_add(x4, x0);
+    let t6: Fp2 = fp2_square(t6);
+    let t6: Fp2 = fp2_sub(t6, t0);
+    let t6: Fp2 = fp2_sub(t6, t1);
+
+    let t2: Fp2 = fp2_square(x2);
+    let t3: Fp2 = fp2_square(x3);
+
+    let t7: Fp2 = fp2_add(x2, x3);
+    let t7: Fp2 = fp2_square(t7);
+    let t7: Fp2 = fp2_sub(t7, t2);
+    let t7: Fp2 = fp2_sub(t7, t3);
+
+    let t4: Fp2 = fp2_square(x5);
+    let t5: Fp2 = fp2_square(x1);
+
+    let t8: Fp2 = fp2_add(x5, x1);
+    let t8: Fp2 = fp2_square(t8);
+    let t8: Fp2 = fp2_sub(t8, t4);
+    let t8: Fp2 = fp2_sub(t8, t5);
+    let t8: Fp2 = fp2_mul_by_non_residue(t8);
+
+    let t0: Fp2 = fp2_mul_by_non_residue(t0);
+    let t0: Fp2 = fp2_add(t0, t1);
+    let t2: Fp2 = fp2_mul_by_non_residue(t2);
+    let t2: Fp2 = fp2_add(t2, t3);
+    let t4: Fp2 = fp2_mul_by_non_residue(t4);
+    let t4: Fp2 = fp2_add(t4, t5);
+
+    let x0: Fp2 = fp2_sub(t0, x0);
+    let x0: Fp2 = fp2_double(x0);
+    let x0: Fp2 = fp2_add(x0, t0);
+
+    let x1: Fp2 = fp2_sub(t2, x1);
+    let x1: Fp2 = fp2_double(x1);
+    let x1: Fp2 = fp2_add(x1, t2);
+
+    let x2: Fp2 = fp2_sub(t4, x2);
+    let x2: Fp2 = fp2_double(x2);
+    let x2: Fp2 = fp2_add(x2, t4);
+
+    let x3: Fp2 = fp2_add(t8, x3);
+    let x3: Fp2 = fp2_double(x3);
+    let x3: Fp2 = fp2_add(x3, t8);
+    
+    let x4: Fp2 = fp2_add(t6, x4);
+    let x4: Fp2 = fp2_double(x4);
+    let x4: Fp2 = fp2_add(x4, t6);
+
+    let x5: Fp2 = fp2_add(t7, x5);
+    let x5: Fp2 = fp2_double(x5);
+    let x5: Fp2 = fp2_add(x5, t7);
+
+    ((x0, x1, x2), (x3, x4, x5))
+}
+
+fn fp12_n_cyclotomic_square_iter(x: Fp12, target: u8, i: u8) -> Either<Fp12, Fp12> {
+    match jet::le_8(target, i) {
+        true => Left(x),   
+        false => {
+            let _: bool = dbg!(true);
+            Right(fp12_cyclotomic_square(x))
+        },
+    }
+}
+
+fn fp12_n_cyclotomic_square(x: Fp12, n: u8) -> Fp12 {
+    unwrap_left::<Fp12>(for_while::<fp12_n_cyclotomic_square_iter>(x, n))
+}
+
+fn fp12_exponentiation(x: Fp12) -> Fp12 {
+    let t3: Fp12 = fp12_cyclotomic_square(x);    
+    let t5: Fp12 = fp12_cyclotomic_square(t3);
+    let res: Fp12 = fp12_cyclotomic_square(t5);
+    let t0: Fp12 = fp12_cyclotomic_square(res);
+    let t2: Fp12 = fp12_mul(x, t0);
+    let t0: Fp12 = fp12_mul(t2, t3);
+    let t1: Fp12 = fp12_mul(x, t0);
+    let t4: Fp12 = fp12_mul(res, t2);
+    let t6: Fp12 = fp12_cyclotomic_square(t2);
+    let t1: Fp12 = fp12_mul(t1, t0);
+    let t0: Fp12 = fp12_mul(t1, t3);
+    let t6: Fp12 = fp12_n_cyclotomic_square(t6, 6);
+    let t5: Fp12 = fp12_mul(t5, t6);
+    let t5: Fp12 = fp12_mul(t4, t5);
+    let t5: Fp12 = fp12_n_cyclotomic_square(t5, 7);
+    let t4: Fp12 = fp12_mul(t4, t5);
+    let t4: Fp12 = fp12_n_cyclotomic_square(t4, 8);
+    let t4: Fp12 = fp12_mul(t4, t0);
+    let t3: Fp12 = fp12_mul(t3, t4);
+    let t3: Fp12 = fp12_n_cyclotomic_square(t3, 6);
+    let t2: Fp12 = fp12_mul(t2, t3);
+    let t2: Fp12 = fp12_n_cyclotomic_square(t2, 8);
+    let t2: Fp12 = fp12_mul(t0, t2);
+    let t2: Fp12 = fp12_n_cyclotomic_square(t2, 6);
+    let t2: Fp12 = fp12_mul(t0, t2);
+    let t2: Fp12 = fp12_n_cyclotomic_square(t2, 10);
+    let t1: Fp12 = fp12_mul(t1, t2);
+    let t1: Fp12 = fp12_n_cyclotomic_square(t1, 6);
+    let t0: Fp12 = fp12_mul(t0, t1);
+    fp12_mul(res, t0)
+}
+
+#ifdef TESTING
+
+fn test_fp12_mul() {
+    let a: Fp12 = fp12_new(
+        fp6_new(fp2_new(1111, 2222), fp2_new(3333, 4444), fp2_new(5555, 6666)),
+        fp6_new(fp2_new(7777, 8888), fp2_new(9999, 0001), fp2_new(1111, 2222))
+    );
+
+    let b: Fp12 = fp12_new(
+        fp6_new(fp2_new(1212, 1313), fp2_new(1414, 1515), fp2_new(1616, 1717)),
+        fp6_new(fp2_new(1818, 1919), fp2_new(2020, 2121), fp2_new(2222, 2323))
+    );
+
+    let res_expected: Fp12 = fp12_new(
+        fp6_new (
+            fp2_new (
+                21888242871839275222246405745257275088696311157297823662689037894645219567025, 
+                877730501
+            ), 
+            fp2_new (
+                98610340, 
+                516412697
+            ), 
+            fp2_new (
+                21888242871839275222246405745257275088696311157297823662689037894645203427831, 
+                150813402
+            )
+        ),
+        fp6_new (
+            fp2_new (
+                7388857, 
+                619417547
+            ), 
+            fp2_new (
+                21888242871839275222246405745257275088696311157297823662689037894645151250322, 
+                352568174
+            ), 
+            fp2_new (
+                1793861, 
+                93360966
+            )
+        )
+    );
+
+
+    let actual_res: Fp12 = fp12_mul(a, b);
+    assert!(fp12_eq(res_expected, actual_res))
+}
+
+fn test_fp12_square() {
+    let a: Fp12 = fp12_new(
+        fp6_new(fp2_new(1111, 2222), fp2_new(3333, 4444), fp2_new(5555, 6666)),
+        fp6_new(fp2_new(7777, 8888), fp2_new(9999, 0001), fp2_new(1111, 2222))
+    );
+
+    let res_expected: Fp12 = fp12_new(
+        fp6_new (
+            fp2_new (
+                348058515, 
+                1393728390
+            ), 
+            fp2_new (
+                21888242871839275222246405745257275088696311157297823662689037894645154575747, 
+                1238039517
+            ), 
+            fp2_new (
+                91321978, 
+                287612347
+            )
+        ),
+        fp6_new (
+            fp2_new (
+                708369156, 
+                1575080254
+            ), 
+            fp2_new (
+                21888242871839275222246405745257275088696311157297823662689037894645026244137, 
+                511011116
+            ), 
+            fp2_new (
+                27146174,
+                301180990
+            )
+        )
+    );
+
+    let actual_res: Fp12 = dbg!(fp12_square(a));
+    assert!(fp12_eq(res_expected, actual_res))
+}
+
+fn test_fp12_frobenius() {
+    let a: Fp12 = fp12_new(
+        fp6_new(fp2_new(1111, 2222), fp2_new(3333, 4444), fp2_new(5555, 6666)),
+        fp6_new(fp2_new(7777, 8888), fp2_new(9999, 0001), fp2_new(1111, 2222))
+    );
+
+    let res_expected: Fp12 = fp12_new(
+        fp6_new (
+            fp2_new (
+                1111,
+                21888242871839275222246405745257275088696311157297823662689037894645226206361
+            ), 
+            fp2_new (
+                3031633701193515893196004858120863378621862911022969156362158898563068913115,
+                1726423267210742132056981196711265316441933309734442184803944283927365787611
+            ), 
+            fp2_new (
+                5395693507901925339225642832505430450811873720166139068454527091282351195729,
+                14757164627417319766615558758116862807088328648766200085746416751079310057383
+            )
+        ),
+        fp6_new (
+            fp2_new (
+                18775243977882800293197851686243435593784471898303923601798101812838545897239,
+                12676468661044801043766513286478663650174797966130086861561772324618548644142
+            ), 
+            fp2_new (
+                2391038730259703540117482046689750452807397008964108848561294205991329480362,
+                9033432350778062830572311813913286894741075463637346163539503357082529031660
+            ), 
+            fp2_new (
+                6531177081787105388018243701268521032755767961060720013619537605944099695247,
+                4655006105394875918011723506363873124438201723866336414214075223070419326202
+            )
+        )
+    );
+
+    let actual_res: Fp12 = fp12_frobenius(a);
+    assert!(fp12_eq(res_expected, actual_res))
+}
+
+fn test_fp12_frobenius_square() {
+    let a: Fp12 = fp12_new(
+        fp6_new(fp2_new(1111, 2222), fp2_new(3333, 4444), fp2_new(5555, 6666)),
+        fp6_new(fp2_new(7777, 8888), fp2_new(9999, 0001), fp2_new(1111, 2222))
+    );
+
+    let res_expected: Fp12 = fp12_new(
+        fp6_new (
+            fp2_new (
+                1111, 
+                2222
+            ), 
+            fp2_new (
+                21888242871839267876446108746566911000490036319033007755416268046919788202572,
+                21888242871839265427846009747003456304421278039611402452992011431011308867235
+            ), 
+            fp2_new (
+                12243000494997817273480343791397108026512121283079542396671130,
+                14691600593997380728176412549676529631814545539695450876005356
+            )
+        ),
+        fp6_new (
+            fp2_new (
+                21888242871839258082045712748313092216215003201346586545719241583285870869001,
+                21888242871839255633445613748749637520146244921924981243294984967377391534775
+            ), 
+            fp2_new (
+                21888242871839275222246405745257275088696311157297823662689037894645226198584,
+                21888242871839275222246405745257275088696311157297823662689037894645226208582
+            ), 
+            fp2_new (
+                2448600098999563454696068758279421605302424256615908479335337,
+                4897200197999126909392137516558843210604848513231816958670674
+            )
+        )
+    );
+
+    let actual_res: Fp12 = fp12_frobenius_square(a);
+    assert!(fp12_eq(res_expected, actual_res))
+}
+
+fn test_fp12_frobenius_cube() {
+    let a: Fp12 = fp12_new(
+        fp6_new(fp2_new(1111, 2222), fp2_new(3333, 4444), fp2_new(5555, 6666)),
+        fp6_new(fp2_new(7777, 8888), fp2_new(9999, 0001), fp2_new(1111, 2222))
+    );
+
+    let res_expected: Fp12 = fp12_new(
+        fp6_new (
+            fp2_new (
+                1111,
+                21888242871839275222246405745257275088696311157297823662689037894645226206361
+            ), 
+            fp2_new (
+                10395651266535325108081298207750616955464621670998078665131477862608310998733,
+                16192332210529274748537697984418096766828154470590342986206266033905176266832
+            ), 
+            fp2_new (
+                14628972353152961657483360415563248448343938970176792106642099172883339730143,
+                1962014843354217073014200716969979077176614156152613107161947134182684996621
+            )
+        ),
+        fp6_new (
+            fp2_new (
+                11666877209572960051442951937725813652122170938548126657861837499707065455894,
+                1544520750047526863243782134404895269040009379473438428918904443035675481991
+            ), 
+            fp2_new (
+                19497204141579571682128923698567524635888914148333714814127743688653896728221,
+                12854810521061212391674093931343988193955235693660477499149534537562697176923
+            ), 
+            fp2_new (
+                7166029791102689996958670189590918684653776981188538937945275425489843581930,
+                1495319514546411790601260471633279579476051708427137254458585545095375036846
+            )
+        )
+    );
+
+    let actual_res: Fp12 = fp12_frobenius_cube(a);
+    assert!(fp12_eq(res_expected, actual_res))
+}
+
+fn test_fp12_cyclomatic_square() {
+    let a: Fp12 = fp12_new(
+        fp6_new(fp2_new(1111, 2222), fp2_new(3333, 4444), fp2_new(5555, 6666)),
+        fp6_new(fp2_new(7777, 8888), fp2_new(9999, 0001), fp2_new(1111, 2222))
+    );
+
+    let res_expected: Fp12 = fp12_new(
+        fp6_new (
+            fp2_new (
+                2688288895, 
+                315287354
+            ), 
+            fp2_new (
+                21888242871839275222246405745257275088696311157297823662689037894644581886355, 
+                2373590395
+            ), 
+            fp2_new (
+                21888242871839275222246405745257275088696311157297823662689037894645085484879, 
+                211055559
+            )
+        ),
+        fp6_new (
+            fp2_new (
+                21888242871839275222246405745257275088696311157297823662689037894644818898207, 
+                629521486
+            ), 
+            fp2_new (
+                66660000,
+                133313336
+            ), 
+            fp2_new (
+                21888242871839275222246405745257275088696311157297823662689037894645129933767,
+                607290376
+            )
+        )
+    );
+
+    let actual_res: Fp12 = fp12_cyclotomic_square(a);
+    assert!(fp12_eq(res_expected, actual_res))
+}
+
+fn test_fp12_n_cyclomatic_square() {
+    let a: Fp12 = fp12_new(
+        fp6_new(fp2_new(1111, 2222), fp2_new(3333, 4444), fp2_new(5555, 6666)),
+        fp6_new(fp2_new(7777, 8888), fp2_new(9999, 0001), fp2_new(1111, 2222))
+    );
+
+    let res_expected: Fp12 = fp12_new(
+        fp6_new (
+            fp2_new (
+                20969273166123741145, 
+                5525394301254921584
+            ), 
+            fp2_new (
+                21888242871839275222246405745257275088696311157297823662687856896310605598440, 
+                21888242871839275222246405745257275088696311157297823662685821378896488017838
+            ), 
+            fp2_new (
+                21888242871839275222246405745257275088696311157297823662664024970035698901724,
+                21888242871839275222246405745257275088696311157297823662675625948515819710481
+            )
+        ),
+        fp6_new (
+            fp2_new (
+                21888242871839275222246405745257275088696311157297823662618267704271060270631,
+                21888242871839275222246405745257275088696311157297823662647291721050615898131
+            ), 
+            fp2_new (
+                823015972815402336,
+                2276410894717688992
+            ), 
+            fp2_new (
+                21888242871839275222246405745257275088696311157297823662688584619938982331131,
+                21888242871839275222246405745257275088696311157297823662687990572360336683367
+            )
+        )
+    );
+
+    let actual_res: Fp12 = fp12_n_cyclotomic_square(a, 2);
+    assert!(fp12_eq(res_expected, actual_res))
+}
+
+fn test_fp12_exp() {
+    let a: Fp12 = fp12_new(
+        fp6_new(fp2_new(1111, 2222), fp2_new(3333, 4444), fp2_new(5555, 6666)),
+        fp6_new(fp2_new(7777, 8888), fp2_new(9999, 0001), fp2_new(1111, 2222))
+    );
+
+    let res_expected: Fp12 = fp12_new(
+        fp6_new (
+            fp2_new (
+                12510938774469125872593628430764074842839863244364240136616729755176560992690,
+                19371854889687633846026885533013723215479587577824042374638721501914844893542
+            ), 
+            fp2_new (
+                11456114519342921476151974943983694744163971164650779839692031135649280843792,
+                14952498024846346786985621055876763623252921890737293595760373614927688504064
+            ), 
+            fp2_new (
+                460776994102286633817160644997074316536977385021054756954654812491071741725,
+                260318210052469152253619343614645821823105214715144079998498730728735454723
+            )
+        ),
+        fp6_new (
+            fp2_new (
+                18801570815224864299083093815601264653839033482103361742086825078058893856489,
+                15788403009586274050331399088071101231213247051388019183755179980551031781524
+            ), 
+            fp2_new (
+                20936732758607326281504613499448254998266474674539953672486640297845239481427,
+                9514907332250519667706803164202200517497947144175588540358458510094869591804
+            ), 
+            fp2_new (
+                13194738860737530267091266724016695071621648383210138519876067365437470505572,
+                17245871812968194542915994320757048409239594553928592773225003568263258875890
+            )
+        )
+    );
+
+    let actual_res: Fp12 = fp12_exponentiation(a);
+    assert!(fp12_eq(res_expected, actual_res))
+}
+
+#endif
