@@ -15,8 +15,10 @@
 //  - base 16: 0x30644E72E131A029B85045B68181585D2833E84879B9709143E1F593F0000001
 #define FR_MOD (3486998266802970665, 13281191951274694749, 2896914383306846353, 4891460686036598785)
 
-// Fp prime field zero value.
-#define FR_ZERO (0,0,0,0)
+#define FR_ONE (1011752739694698287, 7381016538464732718, 3962172157175319849, 12436184717236109307)
+
+// Fr field modulus sub 2
+#define FR_INV_EXP (1463492787413574090, 16965902948054780928, 13419314142665758269, 16912579398983483403)
 
 fn fr_add(x: FieldElement, y: FieldElement) -> FieldElement {
     field_element_add(x, y, FR_MOD)
@@ -49,6 +51,15 @@ fn fr_to_mont(x: FieldElement) -> FieldElement {
 fn fr_from_mont(x: FieldElement) -> FieldElement {
     field_element_from_mont(x, FR_MOD, FR_Q_INV_NEG)
 }
+
+fn fr_exp(a: FieldElement, x: FieldElement) -> FieldElement {
+    field_element_exp(a, x, FR_ONE, FR_MOD, FR_Q_INV_NEG)
+}
+
+fn fr_inv(a: FieldElement) -> FieldElement {
+    field_element_exp(a, FR_INV_EXP, FR_ONE, FR_MOD, FR_Q_INV_NEG)
+}
+
 
 #ifdef TESTING
 
@@ -222,6 +233,32 @@ fn test_fr_mul() {
     let _: u256 = dbg!(field_element_decompose(actual_2limb));
 
     assert!(field_element_eq(actual_2limb, expected_2limb));
+}
+
+fn test_fr_exp() {
+    let a: FieldElement = (995833196182568908, 11766997233009750336, 6639926631339090131, 18081572542486217856);
+    let x: FieldElement = (1391515084757582719, 6266930749763293834, 11944246455099354246, 9713128545260774125);
+    let b: FieldElement = (2685464531498167032, 18240273663524333316, 5993061294465823821, 8012000079126079665);
+
+    assert!(field_element_eq(fr_exp(a, x), b));
+
+
+    let a: FieldElement = (995833196182568908, 11766997233009750336, 6639926631339090131, 18081572542486217856);
+    let x: FieldElement = (0,0,0,0);
+    let b: FieldElement = FR_ONE;
+
+    assert!(field_element_eq(fr_exp(a, x), b));
+}
+
+fn test_fr_inv() {
+    let a: FieldElement = (995833196182568908, 11766997233009750336, 6639926631339090131, 18081572542486217856);
+    let b: FieldElement = fr_mul(fr_inv(a), a);
+    assert!(field_element_eq(FR_ONE, b));
+
+
+    let a: FieldElement = FR_ONE;
+    let b: FieldElement = fr_mul(fr_inv(a), a);
+    assert!(field_element_eq(FR_ONE, b));
 }
 
 #endif

@@ -301,7 +301,7 @@ fn field_element_mul(x: FieldElement, y: FieldElement, modulus: FieldElement, qI
     }
 }
 
-fn field_element_to_mont(value: FieldElement, modulus: FieldElement, rSquare: (u64, u64, u64, u64), qInvNeg: u64) -> FieldElement {
+fn field_element_to_mont(value: FieldElement, modulus: FieldElement, rSquare: FieldElement, qInvNeg: u64) -> FieldElement {
     field_element_mul(value, rSquare, modulus, qInvNeg)
 }
 
@@ -339,6 +339,50 @@ fn field_element_from_mont(value: FieldElement, modulus: FieldElement, qInvNeg: 
             (s3, s2, s1, s0)
         },
     }
+}
+
+fn field_element_scalar_mul_bit_iterate(acc: (u64, FieldElement), ctx: (u64, FieldElement, FieldElement, u64), i: u8) -> Either<FieldElement, (u64, FieldElement)> {
+    let (bitmask, total): (u64, FieldElement) = acc;
+    
+    match jet::eq_8(i, 64) {
+        true => Left(total),
+        false => {
+            let (xi, a, modulus, qInvNeg): (u64, FieldElement, FieldElement, u64) = ctx;
+
+            let total: FieldElement = field_element_mul(total, total, modulus, qInvNeg);
+            let total: FieldElement = match jet::some_64(jet::and_64(xi, bitmask)) {
+                true => field_element_mul(a, total, modulus, qInvNeg),
+                false => total,
+            };
+
+            let bitmask: u64 =  jet::right_shift_64(1, bitmask);
+            Right((bitmask, total))
+        }
+    }
+}
+
+// Same implementation as in G1
+fn field_element_exp(a: FieldElement, x: FieldElement, one: FieldElement, modulus: FieldElement, qInvNeg :u64) -> FieldElement {
+    // Most significant bit at the most left position
+    let (x1, x2, x3, x4): (u64, u64, u64, u64) = field_element_from_mont(x, modulus, qInvNeg);
+
+    // Moving MSB -> LSB
+
+    let bitmask: u64 = 9223372036854775808; // 2^63
+   
+    let out: Either<FieldElement, (u64, FieldElement)> = for_while::<field_element_scalar_mul_bit_iterate>((bitmask, one), (x1, a, modulus, qInvNeg));
+    let res: FieldElement = unwrap_left::<(u64, FieldElement)>(out);
+
+    let out: Either<FieldElement, (u64, FieldElement)>  = for_while::<field_element_scalar_mul_bit_iterate>((bitmask, res), (x2, a, modulus, qInvNeg));
+    let res: FieldElement = unwrap_left::<(u64, FieldElement)>(out);
+
+    let out: Either<FieldElement, (u64, FieldElement)> = for_while::<field_element_scalar_mul_bit_iterate>((bitmask, res), (x3, a, modulus, qInvNeg));
+    let res: FieldElement = unwrap_left::<(u64, FieldElement)>(out);
+
+    let out: Either<FieldElement, (u64, FieldElement)> = for_while::<field_element_scalar_mul_bit_iterate>((bitmask, res), (x4, a, modulus, qInvNeg));
+    let res: FieldElement = unwrap_left::<(u64, FieldElement)>(out);
+
+    res
 }
 
 #ifdef TESTING
