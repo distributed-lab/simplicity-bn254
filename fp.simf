@@ -38,6 +38,10 @@ fn fp_to_mont(x: FieldElement) -> FieldElement {
     field_element_to_mont(x, FP_MOD, FP_R_SQUARE, FP_Q_INV_NEG)
 }
 
+fn fp_new(value: u256) -> FieldElement {
+    fp_to_mont(field_element_new(value))
+}
+
 fn fp_from_mont(x: FieldElement) -> FieldElement {
     field_element_from_mont(x, FP_MOD, FP_Q_INV_NEG)
 }
@@ -50,8 +54,8 @@ fn fp_eq(x: FieldElement, y: FieldElement) -> bool {
 
 fn test_fp_add() {
     // Only 1 limb is not zero
-    let expected_1limb: FieldElement = field_element_new(200);
-    let actual_1limb: FieldElement = fp_add(field_element_new(100), field_element_new(100));
+    let expected_1limb: FieldElement = fp_new(200);
+    let actual_1limb: FieldElement = fp_add(fp_new(100), fp_new(100));
 
     let _: u256 = dbg!(field_element_decompose(expected_1limb));
     let _: u256 = dbg!(field_element_decompose(actual_1limb));
@@ -59,10 +63,10 @@ fn test_fp_add() {
     assert!(field_element_eq(actual_1limb, expected_1limb));
 
     // 3 limbs are not zero
-    let expected_3limb: FieldElement = field_element_new(4567623456734502163058672543468019698188889198785079926);
+    let expected_3limb: FieldElement = fp_new(4567623456734502163058672543468019698188889198785079926);
     let actual_3limb: FieldElement = fp_add(
-        field_element_new(4567623456734423769034092193793479852479845689346389469), 
-        field_element_new(78394024580349674539845709043509438690457)
+        fp_new(4567623456734423769034092193793479852479845689346389469), 
+        fp_new(78394024580349674539845709043509438690457)
     );
 
     let _: u256 = dbg!(field_element_decompose(expected_3limb));
@@ -71,8 +75,8 @@ fn test_fp_add() {
     assert!(field_element_eq(expected_3limb, actual_3limb));
 
     // Module overflow
-    let expected_overflow: FieldElement = field_element_new(100);
-    let actual_overflow: FieldElement = fp_add(FP_MOD, field_element_new(100));
+    let expected_overflow: FieldElement = fp_new(100);
+    let actual_overflow: FieldElement = fp_add(FP_MOD, fp_new(100));
 
     let _: u256 = dbg!(field_element_decompose(expected_overflow));
     let _: u256 = dbg!(field_element_decompose(actual_overflow));
@@ -82,8 +86,8 @@ fn test_fp_add() {
 
 fn test_fp_double() {
     // Only 1 limb is not zero
-    let expected_1limb: FieldElement = field_element_new(200);
-    let actual_1limb: FieldElement = fp_double(field_element_new(100));
+    let expected_1limb: FieldElement = fp_new(200);
+    let actual_1limb: FieldElement = fp_double(fp_new(100));
 
 
     let _: u256 = dbg!(field_element_decompose(expected_1limb));
@@ -92,8 +96,8 @@ fn test_fp_double() {
     assert!(field_element_eq(actual_1limb, expected_1limb));
 
     // 3 limbs are not zero
-    let expected_3limb: FieldElement = field_element_new(9135246913468847538068184387586959704959691378692778938);
-    let actual_3limb: FieldElement = fp_double(field_element_new(4567623456734423769034092193793479852479845689346389469));
+    let expected_3limb: FieldElement = fp_new(9135246913468847538068184387586959704959691378692778938);
+    let actual_3limb: FieldElement = fp_double(fp_new(4567623456734423769034092193793479852479845689346389469));
 
     let _: u256 = dbg!(field_element_decompose(expected_3limb));
     let _: u256 = dbg!(field_element_decompose(actual_3limb));
@@ -101,19 +105,19 @@ fn test_fp_double() {
     assert!(field_element_eq(expected_3limb, actual_3limb));
 
     // Module overflow
-    let expected_overflow: FieldElement = field_element_new(21888242871839275222246405745257275088696311157297823662689037894645226208583);
-    let actual_overflow: FieldElement = fp_double(FP_MOD);
+    let expected_overflow: FieldElement = fp_new(21888242871839275222246405745257275088696311157297823662689037894645226208583);
+    let actual_overflow: FieldElement = fp_double(fp_to_mont(FP_MOD));
 
     let _: u256 = dbg!(field_element_decompose(expected_overflow));
     let _: u256 = dbg!(field_element_decompose(actual_overflow));
 
-    assert!(field_element_eq(expected_overflow, actual_overflow))   
+    assert!(field_element_eq(expected_overflow, actual_overflow))
 }
 
 fn test_fp_sub() {
     // Only 1 limb is not zero
-    let expected_1limb: FieldElement = field_element_new(100);
-    let actual_1limb: FieldElement = fp_sub(field_element_new(200), field_element_new(100));
+    let expected_1limb: FieldElement = fp_new(100);
+    let actual_1limb: FieldElement = fp_sub(fp_new(200), fp_new(100));
 
     let _: u256 = dbg!(field_element_decompose(expected_1limb));
     let _: u256 = dbg!(field_element_decompose(actual_1limb));
@@ -121,10 +125,10 @@ fn test_fp_sub() {
     assert!(field_element_eq(actual_1limb, expected_1limb));
 
     // 3 limbs are not zero
-    let expected_3limb: FieldElement = field_element_new(4567623456734345375009511844118940006770802179907699012);
+    let expected_3limb: FieldElement = fp_new(4567623456734345375009511844118940006770802179907699012);
     let actual_3limb: FieldElement = fp_sub(
-        field_element_new(4567623456734423769034092193793479852479845689346389469), 
-        field_element_new(78394024580349674539845709043509438690457)
+        fp_new(4567623456734423769034092193793479852479845689346389469), 
+        fp_new(78394024580349674539845709043509438690457)
     );
 
     let _: u256 = dbg!(field_element_decompose(expected_3limb));
@@ -133,8 +137,8 @@ fn test_fp_sub() {
     assert!(field_element_eq(expected_3limb, actual_3limb));
 
     // Module overflow
-    let expected_overflow: FieldElement = field_element_new(100);
-    let actual_overflow: FieldElement = fp_sub(field_element_new(100), FP_MOD);
+    let expected_overflow: FieldElement = fp_new(100);
+    let actual_overflow: FieldElement = fp_sub(fp_new(100), FP_MOD);
 
     let _: u256 = dbg!(field_element_decompose(expected_overflow));
     let _: u256 = dbg!(field_element_decompose(actual_overflow));
@@ -144,8 +148,8 @@ fn test_fp_sub() {
 
 fn test_fp_neg() {
     // Negate zero
-    let expected_zero: FieldElement = field_element_new(0);
-    let actual_zero: FieldElement = fp_neg(field_element_new(0));
+    let expected_zero: FieldElement = fp_new(0);
+    let actual_zero: FieldElement = fp_neg(fp_new(0));
 
     let _: u256 = dbg!(field_element_decompose(expected_zero));
     let _: u256 = dbg!(field_element_decompose(actual_zero));
@@ -153,8 +157,8 @@ fn test_fp_neg() {
     assert!(field_element_eq(actual_zero, expected_zero));
 
     // Only 1 limb is not zero
-    let expected_1limb: FieldElement = field_element_new(21888242871839275222246405745257275088696311157297823662689037894645226208483);
-    let actual_1limb: FieldElement = fp_neg(field_element_new(100));
+    let expected_1limb: FieldElement = fp_new(21888242871839275222246405745257275088696311157297823662689037894645226208483);
+    let actual_1limb: FieldElement = fp_neg(fp_new(100));
 
     let _: u256 = dbg!(field_element_decompose(expected_1limb));
     let _: u256 = dbg!(field_element_decompose(actual_1limb));
@@ -162,8 +166,8 @@ fn test_fp_neg() {
     assert!(field_element_eq(actual_1limb, expected_1limb));
 
     // 3 limbs are not zero
-    let expected_3limb: FieldElement = field_element_new(21888242871839275222241838121800540664927277065104030182836558048955879819114);
-    let actual_3limb: FieldElement = fp_neg(field_element_new(4567623456734423769034092193793479852479845689346389469));
+    let expected_3limb: FieldElement = fp_new(21888242871839275222241838121800540664927277065104030182836558048955879819114);
+    let actual_3limb: FieldElement = fp_neg(fp_new(4567623456734423769034092193793479852479845689346389469));
 
     let _: u256 = dbg!(field_element_decompose(expected_3limb));
     let _: u256 = dbg!(field_element_decompose(actual_3limb));
@@ -173,13 +177,14 @@ fn test_fp_neg() {
 
 fn test_fp_mont() {
     // Only 1 limb is not zero
-    let expected_1limb: FieldElement = field_element_new(100);
-    let actual_1limb: FieldElement = fp_from_mont(fp_to_mont(expected_1limb));
+    let element1: u256 = 100;
+    let expected_1limb: FieldElement = fp_new(element1);
+    let actual_1limb: FieldElement = fp_from_mont(expected_1limb);
 
     let _: FieldElement = dbg!(expected_1limb);
     let _: FieldElement = dbg!(actual_1limb);
 
-    assert!(field_element_eq(actual_1limb, expected_1limb));
+    assert!(field_element_eq(actual_1limb, field_element_new(element1)));
 
     // 4 limbs are not zero (FP_MOD-1 used)
     let expected_4limb: FieldElement = (3486998266802970665, 13281191951274694749, 10917124144477883021, 4332616871279656262);
@@ -193,8 +198,8 @@ fn test_fp_mont() {
 
 fn test_fp_mul() {
     // Only 1 limb is not zero
-    let expected_1limb: FieldElement = field_element_new(10000);
-    let actual_1limb: FieldElement = fp_from_mont(fp_mul(fp_to_mont(field_element_new(100)), fp_to_mont(field_element_new(100))));
+    let expected_1limb: FieldElement = fp_new(10000);
+    let actual_1limb: FieldElement = fp_mul(fp_new(100), fp_new(100));
 
     let _: u256 = dbg!(field_element_decompose(expected_1limb));
     let _: u256 = dbg!(field_element_decompose(actual_1limb));
@@ -202,8 +207,8 @@ fn test_fp_mul() {
     assert!(field_element_eq(actual_1limb, expected_1limb));
 
     // Two limbs are not zero and module overflow
-    let expected_2limb: FieldElement = field_element_new(4000000000000000000000);
-    let actual_2limb: FieldElement = fp_from_mont(fp_mul(fp_to_mont(field_element_new(2000000000000000000000)), fp_to_mont(field_element_new(2))));
+    let expected_2limb: FieldElement = fp_new(4000000000000000000000);
+    let actual_2limb: FieldElement = fp_mul(fp_new(2000000000000000000000), fp_new(2));
 
     let _: u256 = dbg!(field_element_decompose(expected_2limb));
     let _: u256 = dbg!(field_element_decompose(actual_2limb));
@@ -211,13 +216,14 @@ fn test_fp_mul() {
     assert!(field_element_eq(actual_2limb, expected_2limb));
 
     // All limbs are not zero
-    let expected_4limb: FieldElement = field_element_new(917110295551321618512897515040388707124899077868094579263219511374664388868);
-    let actual_4limb: FieldElement = fp_from_mont(fp_mul(fp_to_mont(field_element_new(123456789012345678901234567890123456789012345678901234567890)), fp_to_mont(field_element_new(123456789012345678901234567890123456789012345678901234567890))));
+    let expected_4limb: FieldElement = fp_new(917110295551321618512897515040388707124899077868094579263219511374664388868);
+    let actual_4limb: FieldElement = fp_mul(fp_new(123456789012345678901234567890123456789012345678901234567890), fp_new(123456789012345678901234567890123456789012345678901234567890));
 
     let _: u256 = dbg!(field_element_decompose(expected_2limb));
     let _: u256 = dbg!(field_element_decompose(actual_2limb));
 
     assert!(field_element_eq(actual_2limb, expected_2limb));
 }
+
 
 #endif
