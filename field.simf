@@ -301,7 +301,7 @@ fn field_element_mul(x: FieldElement, y: FieldElement, modulus: FieldElement, qI
     }
 }
 
-fn field_element_to_mont(value: FieldElement, modulus: FieldElement, rSquare: (u64, u64, u64, u64), qInvNeg: u64) -> FieldElement {
+fn field_element_to_mont(value: FieldElement, modulus: FieldElement, rSquare: FieldElement, qInvNeg: u64) -> FieldElement {
     field_element_mul(value, rSquare, modulus, qInvNeg)
 }
 
