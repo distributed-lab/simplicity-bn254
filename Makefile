@@ -1,5 +1,5 @@
-debug:
-	bash scripts/debug.sh
+build:
+	bash scripts/build.sh
 
 test: 
 - all:
