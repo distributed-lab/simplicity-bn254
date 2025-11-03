@@ -1,6 +1,6 @@
 #include "fr.simf"
 
-#define G1_ZERO ((0,0,0,0), (0,0,0,0), (0,0,0,0))
+#define G1_ZERO (FIELD_ZERO, FIELD_ZERO, FIELD_ZERO)
 
 type G1 = (FieldElement, FieldElement, FieldElement);
 
