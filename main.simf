@@ -1,4 +1,4 @@
-#include "fp2.simf"
+#include "g1.simf"
 
 fn main() {
 
