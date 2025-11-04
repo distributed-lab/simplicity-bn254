@@ -1,7 +1,7 @@
 #!/bin/bash
 
-rm -rf ./tmp
-mkdir ./tmp
+TEMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TEMP_DIR"' EXIT
 
 rm -rf ./target
 mkdir ./target
@@ -14,26 +14,22 @@ for file in $simf_files; do
     base_name=$(basename "$file" .simf)
 
     # save tests for this file
-    unifdef -UTESTING -c "$file" > ./tmp/${base_name}_tests.simf
+    unifdef -UTESTING -c "$file" > ${TEMP_DIR}/${base_name}_tests.simf
 
     # dave defines
-    grep -E '^[[:space:]]*#define[[:space:]]+' "$file" > ./tmp/${base_name}_defines.simf
+    grep -E '^[[:space:]]*#define[[:space:]]+' "$file" > ${TEMP_DIR}/${base_name}_defines.simf
 
     # build without tests but with includes
-    mcpp -P -I . "$file" > ./tmp/${base_name}_compiled0.simf
+    mcpp -P -I . "$file" > ${TEMP_DIR}/${base_name}_compiled0.simf 
 
     # concat with tests and defines
-    cat ./tmp/${base_name}_defines.simf ./tmp/${base_name}_compiled0.simf ./tmp/${base_name}_tests.simf > ./tmp/${base_name}_compiled1.simf
+    cat ${TEMP_DIR}/${base_name}_defines.simf ${TEMP_DIR}/${base_name}_compiled0.simf ${TEMP_DIR}/${base_name}_tests.simf > ${TEMP_DIR}/${base_name}_compiled1.simf
 
     mkdir ./target/${base_name}
 
 
     # apply define for tests
-    mcpp -P -I . -DTESTING ./tmp/${base_name}_compiled1.simf > ./target/${base_name}/${base_name}.simf
+    mcpp -P -I . -DTESTING ${TEMP_DIR}/${base_name}_compiled1.simf > ./target/${base_name}/${base_name}.simf 
 
     simply test --logging info --entrypoint ./target/${base_name}/${base_name}.simf
 done
-
-rm -rf ./tmp
-
-
