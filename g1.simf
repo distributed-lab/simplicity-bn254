@@ -67,9 +67,8 @@ fn g1_double(a: G1) -> G1 {
     (bx, by, bz)
 }
 
-// Following gnark-crypto which itself follows
-// https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl
-fn g1_add(q: G1, p: G1) -> G1 {
+// This is an auxiliary function provided to perform add operation over G1.
+fn g1_add_main_operations(q: G1, p: G1) -> G1 {
     let (qx, qy, qz): (FieldElement, FieldElement, FieldElement) = q;
     let (px, py, pz): (FieldElement, FieldElement, FieldElement) = p;
 
@@ -80,42 +79,61 @@ fn g1_add(q: G1, p: G1) -> G1 {
     let S1: FieldElement = fp_mul(fp_mul(qy, pz), Z2Z2);
     let S2: FieldElement = fp_mul(fp_mul(py, qz), Z1Z1);
 
+    let u_and_s: bool = <u1>::into(jet::and_1(<bool>::into(field_element_eq(U1, U2)), <bool>::into(field_element_eq(S1, S2))));
+    match u_and_s {
+        true => g1_double(q),
+        false => {
+            // TODO: Check if we really need this.
+            // Probably, while we do not care about the speed, 
+            // such conditional execution will only increase the program size.
+            // match jet::and_1(fp_eq(U1, U2), fp_eq(S1, S2)) {
+            //     true => g1_double(p),
+            //     false => {
+                    
+            //     }
+            // }
 
-    // TODO: Check if we really need this.
-    // Probably, while we do not care about the speed, 
-    // such conditional execution will only increase the program size.
-    // match jet::and_1(fp_eq(U1, U2), fp_eq(S1, S2)) {
-    //     true => g1_double(p),
-    //     false => {
-            
-    //     }
-    // }
+            let H: FieldElement = fp_sub(U2, U1);
+            let I: FieldElement = fp_square(fp_double(H));
+            let J: FieldElement = fp_mul(H, I);
+            let r: FieldElement = fp_double(fp_sub(S2, S1));
+            let V: FieldElement = fp_mul(U1, I);
 
-    let H: FieldElement = fp_sub(U2, U1);
-    let I: FieldElement = fp_square(fp_double(H));
-    let J: FieldElement = fp_mul(H, I);
-    let r: FieldElement = fp_double(fp_sub(S2, S1));
-    let V: FieldElement = fp_mul(U1, I);
+            let rx: FieldElement = fp_sub(fp_sub(fp_sub(fp_square(r), J), V), V);
 
-    let rx: FieldElement = fp_sub(fp_sub(fp_sub(fp_square(r), J), V), V);
+            let ry: FieldElement = fp_mul(fp_sub(V, rx), r);
+            let S1: FieldElement = fp_double(fp_mul(S1, J));
+            let ry: FieldElement = fp_sub(ry, S1);
 
-    let ry: FieldElement = fp_mul(fp_sub(V, rx), r);
-    let S1: FieldElement = fp_double(fp_mul(S1, J));
-    let ry: FieldElement = fp_sub(ry, S1);
+            let rz: FieldElement = fp_mul(fp_sub(fp_sub(fp_square(fp_add(pz, qz)), Z1Z1), Z2Z2), H);
 
-    let rz: FieldElement = fp_mul(fp_sub(fp_sub(fp_square(fp_add(pz, qz)), Z1Z1), Z2Z2), H);
+            // Check one was zero -> the result is zero.
+            let p_is_zero: u1 = <bool>::into(g1_is_zero(p));
+            let q_is_zero: u1 = <bool>::into(g1_is_zero(q));
+            let check_bit: u1 = jet::xor_1(p_is_zero, q_is_zero);
 
-    // Check one was zero -> the result is zero.
-    let p_is_zero: u1 = <bool>::into(g1_is_zero(p));
-    let q_is_zero: u1 = <bool>::into(g1_is_zero(q));
-    let check_bit: u1 = jet::xor_1(p_is_zero, q_is_zero);
+            match jet::some_1(check_bit) {
+                true => match g1_is_zero(p) {
+                        true => q,
+                        false => p,
+                    },
+                false => (rx, ry, rz),
+            }
+        }
+    }
+}
 
-    match jet::some_1(check_bit) {
-        true => match g1_is_zero(p) {
+// Following gnark-crypto which itself follows
+// https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl
+fn g1_add(q: G1, p: G1) -> G1 {
+    match g1_is_zero(q) {
+        true => p,
+        false => {
+            match g1_is_zero(p) {
                 true => q,
-                false => p,
-            },
-        false => (rx, ry, rz),
+                false => g1_add_main_operations(q, p),
+            }
+        }
     }
 }
 
@@ -248,7 +266,7 @@ fn test_g1_double() {
     let a: G1 = (ax,ay,az);
     let b: G1 = (bx,by,bz);
 
-    assert!(g1_eq(b,g1_double(a)))
+    assert!(g1_eq(b,g1_double(a)));
 }
 
 fn test_g1_add() {
@@ -268,7 +286,16 @@ fn test_g1_add() {
     let b: G1 = (bx,by,bz);
     let c: G1 = (cx,cy,cz);
 
-    assert!(g1_eq(c,g1_add(a,b)))
+    assert!(g1_eq(c,g1_add(a,b)));
+
+    let cx: FieldElement = (2579478271892018428, 16740039199248248983, 11314098184430500312, 15560659807810893111);
+    let cy: FieldElement = (86907429614594559, 3073471434231216203, 12032880197668961362, 431213066858707297);
+    let cz: FieldElement = (2892882494169863239, 13303912991492853687, 6533256836492562485, 8436369679768058000);
+    let c: G1 = (cx,cy,cz);
+
+    assert!(g1_eq(c,g1_add(a, a)));
+
+    assert!(g1_eq(a,g1_add(a, ((0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)))));
 }
 
 fn test_g1_sub() {
