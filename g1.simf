@@ -106,19 +106,7 @@ fn g1_add_main_operations(q: G1, p: G1) -> G1 {
             let ry: FieldElement = fp_sub(ry, S1);
 
             let rz: FieldElement = fp_mul(fp_sub(fp_sub(fp_square(fp_add(pz, qz)), Z1Z1), Z2Z2), H);
-
-            // Check one was zero -> the result is zero.
-            let p_is_zero: u1 = <bool>::into(g1_is_zero(p));
-            let q_is_zero: u1 = <bool>::into(g1_is_zero(q));
-            let check_bit: u1 = jet::xor_1(p_is_zero, q_is_zero);
-
-            match jet::some_1(check_bit) {
-                true => match g1_is_zero(p) {
-                        true => q,
-                        false => p,
-                    },
-                false => (rx, ry, rz),
-            }
+            (rx, ry, rz)
         }
     }
 }
@@ -126,14 +114,17 @@ fn g1_add_main_operations(q: G1, p: G1) -> G1 {
 // Following gnark-crypto which itself follows
 // https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl
 fn g1_add(q: G1, p: G1) -> G1 {
-    match g1_is_zero(q) {
-        true => p,
-        false => {
-            match g1_is_zero(p) {
+    // Check one was zero -> the result is zero.
+    let p_is_zero: u1 = <bool>::into(g1_is_zero(p));
+    let q_is_zero: u1 = <bool>::into(g1_is_zero(q));
+    let check_bit: u1 = jet::xor_1(p_is_zero, q_is_zero);
+
+    match jet::some_1(check_bit) {
+        true => match g1_is_zero(p) {
                 true => q,
-                false => g1_add_main_operations(q, p),
-            }
-        }
+                false => p,
+            },
+        false => g1_add_main_operations(q, p),
     }
 }
 
