@@ -1,3 +1,6 @@
+#ifndef FIELD_SIMF
+#define FIELD_SIMF
+
 // Prime field zero in Montgomery form
 #define FIELD_ZERO (0, 0, 0, 0)
 
@@ -398,5 +401,7 @@ fn test_field_element_num_is_zero() {
     let is_zero: bool = field_element_is_zero(field_element_new(18446744073709551616));
     assert!(<u1>::into(jet::complement_1(<bool>::into(is_zero))))
 }
+
+#endif
 
 #endif

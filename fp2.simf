@@ -1,3 +1,6 @@
+#ifndef FP2_SIMF
+#define FP2_SIMF
+
 #include "fp.simf"
 
 #define MUL_1_POWER_1_X (212598772761311868, 1278438861261381767, 14585784200204367754, 12653890742059813127)
@@ -26,10 +29,19 @@
 #define MUL_3_POWER_5_X (1571199014989505406, 9239559758168096094, 13995139551301264911, 16193900971494954399)
 #define MUL_3_POWER_5_Y (2657556514797346915, 10965492220518093659, 11171599147282597747, 3254114329011132839)
 
+#define FP2_ZERO ((0, 0, 0, 0), (0, 0, 0, 0))
+
 type Fp2 = (FieldElement, FieldElement);
 
 fn fp2_new(x: u256, y: u256) -> Fp2 {
     (fp_new(x), fp_new(y))
+}
+
+fn fp2_is_zero(x: Fp2) -> bool {
+    let (x0, x1): (FieldElement, FieldElement) = x;
+
+    let res: u1 = jet::and_1(<bool>::into(field_element_is_zero(x0)), <bool>::into(field_element_is_zero(x1)));
+    <u1>::into(res)
 }
 
 fn fp2_add(x: Fp2, y: Fp2) -> Fp2 {
@@ -332,7 +344,7 @@ fn test_fp2_mul_by_non_residue_power_3() {
     let a: Fp2 = fp2_new(1111, 2222);
 
     let res_expected_3_pow_1: Fp2 = fp2_new(
-        19496111822120355905539961418991932882323234947216976518148270968875139421341,
+        0x7b81eb4879ba66ce541c3827f8d0047c089ec8be6138788e7661819719c252e9,
         19581526286068249109422366553039633636353944074244265223492953057737209906763
     );
     let res_actual_3_pow_1: Fp2 = mul_by_non_residue_3_power_1(a);
@@ -372,4 +384,5 @@ fn test_fp2_mul_by_non_residue_power_3() {
     assert!(fp2_eq(res_actual_3_pow_5, res_expected_3_pow_5));
 }
 
+#endif
 #endif

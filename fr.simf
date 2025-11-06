@@ -1,5 +1,7 @@
-#include "fp.simf"
+#ifndef FR_SIMF
+#define FR_SIMF
 
+#include "field.simf"
 
 // q + r'.r = 1, i.e., qInvNeg = - q⁻¹ mod r
 // used for Montgomery reduction
@@ -261,4 +263,5 @@ fn test_fr_inv() {
     assert!(field_element_eq(FR_ONE, b));
 }
 
+#endif
 #endif

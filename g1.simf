@@ -1,3 +1,6 @@
+#ifndef G1_SIMF
+#define G1_SIMF
+
 #include "fr.simf"
 
 #define G1_ZERO (FIELD_ZERO, FIELD_ZERO, FIELD_ZERO)
@@ -115,18 +118,20 @@ fn g1_add_main_operations(q: G1, p: G1) -> G1 {
 // https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl
 fn g1_add(q: G1, p: G1) -> G1 {
     // Check one was zero -> the result is zero.
-    let p_is_zero: u1 = <bool>::into(g1_is_zero(p));
+    let p_is_zero_bool: bool = g1_is_zero(p);
+    let p_is_zero: u1 = <bool>::into(p_is_zero_bool);
     let q_is_zero: u1 = <bool>::into(g1_is_zero(q));
     let check_bit: u1 = jet::xor_1(p_is_zero, q_is_zero);
 
     match jet::some_1(check_bit) {
-        true => match g1_is_zero(p) {
+        true => match p_is_zero_bool {
                 true => q,
                 false => p,
             },
         false => g1_add_main_operations(q, p),
     }
 }
+
 
 fn g1_sub(a: G1, b: G1) -> G1 {
     g1_add(a, g1_negate(b))
@@ -195,7 +200,7 @@ fn g1_scalar_mul(p: G1, s: FieldElement) -> G1 {
     // let s3bits: [u1; 64] = <u64>::into(s3);
     // let s4bits: [u1; 64] = <u64>::into(s4);
 
-    // let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s1bits, (g1_zero(), p));
+    // let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s1bits, (G1_ZERO, p));
     // let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s2bits, (res, p));
     // let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s3bits, (res, p));
     // let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s4bits, (res, p));
@@ -326,4 +331,5 @@ fn test_g1_scalar_mul() {
     assert!(g1_eq(b,g1_scalar_mul(a,s)))
 }
 
+#endif
 #endif

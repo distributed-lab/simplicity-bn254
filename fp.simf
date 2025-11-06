@@ -1,3 +1,6 @@
+#ifndef FP_SIMF
+#define FP_SIMF
+
 #include "field.simf"
 
 // q + r'.r = 1, i.e., qInvNeg = - q⁻¹ mod r
@@ -270,4 +273,5 @@ fn test_fp_inv() {
     assert!(field_element_eq(FP_ONE, b));
 }
 
+#endif
 #endif

@@ -1,3 +1,6 @@
+#ifndef FP6_SIMF
+#define FP6_SIMF
+
 #include "fp2.simf"
 
 type Fp6 = (Fp2, Fp2, Fp2);
@@ -214,4 +217,5 @@ fn test_fp6_mul_by_non_residue() {
     assert!(fp6_eq(res_actual, res_expected))
 }
 
+#endif
 #endif
