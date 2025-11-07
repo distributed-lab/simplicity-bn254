@@ -69,7 +69,7 @@ fn g2_double(a: G2) -> G2 {
 }
 
 // This is an auxiliary function provided to perform add operation over G1.
-fn g2_add_main_operations(q: G2, p: G2) -> G2 {
+fn g2_add_internal(q: G2, p: G2) -> G2 {
     let (qx, qy, qz): (Fp2, Fp2, Fp2) = q;
     let (px, py, pz): (Fp2, Fp2, Fp2) = p;
 
@@ -126,7 +126,7 @@ fn g2_add(q: G2, p: G2) -> G2 {
                 true => q,
                 false => p,
             },
-        false => g2_add_main_operations(q, p),
+        false => g2_add_internal(q, p),
     }
 }
 
