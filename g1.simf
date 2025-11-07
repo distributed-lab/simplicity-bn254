@@ -2,6 +2,7 @@
 #define G1_SIMF
 
 #include "fr.simf"
+#include "fp.simf"
 
 #define G1_ZERO (FIELD_ZERO, FIELD_ZERO, FIELD_ZERO)
 
