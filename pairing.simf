@@ -12,7 +12,7 @@ type LineEval = (Fp12, G2);
 
 fn line_double(q: G2, p: G1) -> LineEval {
     let (qx, qy, qz): (Fp2, Fp2, Fp2) = q;
-    let (px, py, pz): (FieldElement, FieldElement, FieldElement) = p;
+    let (px, py, _): (FieldElement, FieldElement, FieldElement) = p;
 
     let tmp0: Fp2 = fp2_square(qx);
     let tmp1: Fp2 = fp2_square(qy);
@@ -58,7 +58,7 @@ fn line_double(q: G2, p: G1) -> LineEval {
 
     let tmp0: Fp2 = fp2_mul(Z_T, fp2_square(qz));
     let tmp0: Fp2 = fp2_double(tmp0);
-    let tmp0: Fp2 = fp2_mul_by_b0(tmp0, py);// check
+    let tmp0: Fp2 = fp2_mul_by_b0(tmp0, py);
 
     let l: Fp12 = (
         (tmp0, FP2_ZERO, FP2_ZERO),
@@ -75,7 +75,7 @@ fn line_double(q: G2, p: G1) -> LineEval {
 fn line_add(q: G2, r: G2, p: G1) -> LineEval {
     let (qx, qy, qz): (Fp2, Fp2, Fp2) = q;
     let (rx, ry, rz): (Fp2, Fp2, Fp2) = r;
-    let (px, py, pz): (FieldElement, FieldElement, FieldElement) = p;
+    let (px, py, _): (FieldElement, FieldElement, FieldElement) = p;
 
     let t0: Fp2 = fp2_mul(qx, fp2_square(rz));
 
@@ -190,7 +190,7 @@ fn miller_loop_iter(acc: (G2, Fp12, u64), context: (G1, G2), i: u8) -> Either<(G
     let (T, f, bitmask): (G2, Fp12, u64) = acc;
     let (P, Q): (G1, G2) = context;
 
-    match jet::eq_8(dbg!(i), 64) {
+    match jet::eq_8(i, 64) {
         true => Left((T, f)),   
         false => {
             // Miller loop main iteration operations
@@ -201,20 +201,19 @@ fn miller_loop_iter(acc: (G2, Fp12, u64), context: (G1, G2), i: u8) -> Either<(G
 
             let (T, f): (G2, Fp12) = match jet::some_64(jet::and_64(NAF_MASK_1, bitmask)) {
                 true => {
-                    let one: u64 = dbg!(1);
+                    // m[i] == 1
                     let (line_l, line_t): (Fp12, G2) = line_add(T, Q, P);
                     (line_t, fp12_mul(f, line_l))
                 }
                 false => {
                     match jet::some_64(jet::and_64(NAF_MASK_2, bitmask)) {
                         true => {
-                            let two: u64 = dbg!(2);
                             // m[i] == 2
                             let Q_NEG: G2 = g2_negate(Q);
                             let (line_l, line_t): (Fp12, G2) = line_add(T, Q_NEG, P);
                             (line_t, fp12_mul(f, line_l))
                         }
-                        // m[i] == 2
+                        // m[i] == 0
                         false => (T, f),
                     }
                 }
@@ -228,17 +227,17 @@ fn miller_loop_iter(acc: (G2, Fp12, u64), context: (G1, G2), i: u8) -> Either<(G
 }
 
 fn miller_loop(q: G2, p: G1) -> Fp12 {
-    // TODO: we can remove this
     let T: G2 = q;
     let f: Fp12 = FP12_ONE;
 
+    //let bitmask: u64 = 9223372036854775808; // 2^63
     let bitmask: u64 = 1; // 2^0
 
     let out: Either<(G2, Fp12), (G2, Fp12, u64)> = for_while::<miller_loop_iter>((T, f, bitmask), (p, q));
     let (T, f): (G2, Fp12) = unwrap_left::<(G2, Fp12, u64)>(out);
 
     let (qx, qy, qz): (Fp2, Fp2, Fp2) = q;
-    let (px, py, pz): (FieldElement, FieldElement, FieldElement) = p;
+    let (px, py, _): (FieldElement, FieldElement, FieldElement) = p;
 
     let q1x: Fp2 = fp2_conjugate(qx);
     let q1y: Fp2 = fp2_conjugate(qy);
