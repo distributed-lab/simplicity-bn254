@@ -1,0 +1,366 @@
+#ifndef PAIRING_FILE
+#define PAIRING_FILE
+
+#include "g1.simf"
+#include "g2.simf"
+#include "fp12.simf"
+
+#define NAF_NUMBER (2308165762157675584, 9513995519425253508)
+
+type LineEval = (Fp12, G2);
+
+fn line_double(q: G2, p: G1) -> LineEval {
+    let (qx, qy, qz): (Fp2, Fp2, Fp2) = q;
+    let (px, py, pz): (FieldElement, FieldElement, FieldElement) = p;
+
+    let tmp0: Fp2 = fp2_square(qx);
+    let tmp1: Fp2 = fp2_square(qy);
+    let tmp2: Fp2 = fp2_square(tmp1);
+
+    let x: Fp2 = fp2_add(tmp1, qx);
+    let x: Fp2 = fp2_square(x);
+    let x: Fp2 = fp2_sub(x, tmp0);
+    let tmp3: Fp2 = fp2_sub(x, tmp2);
+    let tmp3: Fp2 = fp2_double(tmp3);
+
+    let tmp4: Fp2 = fp2_add(tmp0, fp2_double(tmp0));
+    let tmp6: Fp2 = fp2_add(qx, tmp4);
+
+    let tmp5: Fp2 = fp2_square(tmp4);
+    let X_T: Fp2 = fp2_sub(tmp5, fp2_double(tmp3));
+
+    let Z_T: Fp2 = fp2_add(qy, qz);
+    let Z_T: Fp2 = fp2_square(Z_T);
+    let Z_T: Fp2 = fp2_sub(Z_T, tmp1);
+    let Z_T: Fp2 = fp2_sub(Z_T, fp2_square(qz));
+
+    let Y_T: Fp2 = fp2_sub(tmp3, X_T);
+    let Y_T: Fp2 = fp2_mul(Y_T, tmp4);
+
+    let tmp2_8: Fp2 = fp2_double(tmp2);
+    let tmp2_8: Fp2 = fp2_double(tmp2_8);
+    let tmp2_8: Fp2 = fp2_double(tmp2_8);
+    let Y_T: Fp2 = fp2_sub(Y_T, tmp2_8);
+
+    let tmp3: Fp2 = fp2_mul(tmp4, fp2_double(qz));
+    let tmp3: Fp2 = fp2_double(tmp3);
+    let tmp3: Fp2 = fp2_neg(tmp3);
+    let tmp3: Fp2 = fp2_mul_by_b0(tmp3, px);
+
+    let tmp6: Fp2 = fp2_square(tmp6);
+    let tmp6: Fp2 = fp2_sub(tmp6, tmp0);
+    let tmp6: Fp2 = fp2_sub(tmp6, tmp5);
+
+    let tmp1_4: Fp2 = fp2_double(tmp1);
+    let tmp1_4: Fp2 = fp2_double(tmp1_4);
+    let tmp6: Fp2 = fp2_sub(tmp6, tmp1_4);
+
+    let tmp0: Fp2 = fp2_mul(Z_T, fp2_square(qz));
+    let tmp0: Fp2 = fp2_double(tmp0);
+    let tmp0: Fp2 = fp2_mul_by_b0(tmp0, py);
+
+    let l: Fp12 = (
+        (tmp0, FP2_ZERO, FP2_ZERO),
+        (tmp3, tmp6, FP2_ZERO)
+    );
+
+    let T: G2 = (
+        X_T, Y_T, Z_T
+    );
+
+    (l, T)
+}
+
+fn line_add(q: G2, r: G2, p: G1) -> LineEval {
+    let (qx, qy, qz): (Fp2, Fp2, Fp2) = q;
+    let (rx, ry, rz): (Fp2, Fp2, Fp2) = r;
+    let (px, py, pz): (FieldElement, FieldElement, FieldElement) = p;
+
+    let t0: Fp2 = fp2_mul(qx, fp2_square(rz));
+
+    let t1: Fp2 = fp2_add(qy, rz);
+    let t1: Fp2 = fp2_square(t1);
+    let t1: Fp2 = fp2_sub(t1, fp2_square(qy));
+    let t1: Fp2 = fp2_sub(t1, fp2_square(rz));
+    let t1: Fp2 = fp2_mul(t1, fp2_square(rz));
+
+    let t2: Fp2 = fp2_sub(t0, rx);
+    let t3: Fp2 = fp2_square(t2);
+
+    let t4: Fp2 = fp2_double(t3);
+    let t4: Fp2 = fp2_double(t4);
+
+    let t5: Fp2 = fp2_mul(t4, t2);
+    let t6: Fp2 = fp2_sub(t1, fp2_double(ry));
+    let t9: Fp2 = fp2_mul(t6, qx);
+    let t7: Fp2 = fp2_mul(rx, t4);
+
+    let X_T: Fp2 = fp2_square(t6);
+    let X_T: Fp2 = fp2_sub(X_T, t5);
+    let X_T: Fp2 = fp2_sub(X_T, fp2_double(t7));
+
+    let Z_T: Fp2 = fp2_add(rz, t2);
+    let Z_T: Fp2 = fp2_square(Z_T);
+    let Z_T: Fp2 = fp2_sub(Z_T, fp2_square(rz));
+    let Z_T: Fp2 = fp2_sub(Z_T, t3);
+
+    let t10: Fp2 = fp2_add(qy, Z_T);
+    let t8: Fp2 = fp2_sub(t7, X_T);
+    let t8: Fp2 = fp2_mul(t8, t6);
+
+    let t0: Fp2 = fp2_mul(ry, t5);
+    let t0: Fp2 = fp2_double(t0);
+
+    let Y_T: Fp2 = fp2_sub(t8, t0);
+
+    let t10: Fp2 = fp2_square(t10);
+    let t10: Fp2 = fp2_sub(t10, fp2_square(qy));
+    let t10: Fp2 = fp2_sub(t10, fp2_square(Z_T));
+
+    let t9: Fp2 = fp2_double(t9);
+    let t9: Fp2 = fp2_sub(t9, t10);
+
+    let t10: Fp2 = fp2_mul_by_b0(Z_T, py);
+    let t10: Fp2 = fp2_double(t10);
+
+    let t6: Fp2 = fp2_neg(t6);
+    let t1: Fp2 = fp2_mul_by_b0(t6, px);
+    let t1: Fp2 = fp2_double(t1);
+
+    let l: Fp12 = (
+        (t10, FP2_ZERO, FP2_ZERO),
+        (t1, t9, FP2_ZERO)
+    );
+
+    let T: G2 = (
+        X_T, Y_T, Z_T
+    );
+
+    (l, T)
+}
+
+fn final_exponentiation(z: Fp12, z_invert: Fp12) -> Fp12 {
+    let t0: Fp12 = fp12_conjugate(z);
+    let t0: Fp12 = fp12_mul(t0, z_invert);
+    let result: Fp12 = fp12_frobenius_square(t0);
+    let result: Fp12 = fp12_mul(result, t0);
+
+    // https://eprint.iacr.org/2015/192.pdf
+
+    let t0: Fp12 = fp12_exponentiation(result);
+    let t0: Fp12 = fp12_conjugate(t0);
+    let t0: Fp12 = fp12_cyclotomic_square(t0);
+
+    let t2: Fp12 = fp12_exponentiation(t0);
+    let t2: Fp12 = fp12_conjugate(t2);
+    let t1: Fp12 = fp12_cyclotomic_square(t2);
+    let t2: Fp12 = fp12_mul(t2, t1);
+    let t2: Fp12 = fp12_mul(t2, result);
+
+    let t1: Fp12 = fp12_exponentiation(t2);
+    let t1: Fp12 = fp12_cyclotomic_square(t1);
+    let t1: Fp12 = fp12_mul(t1, t2);
+    let t1: Fp12 = fp12_conjugate(t1);
+
+    let t3: Fp12 = fp12_conjugate(t1);
+    let t1: Fp12 = fp12_cyclotomic_square(t0);
+    let t1: Fp12 = fp12_mul(t1, result);
+    let t1: Fp12 = fp12_conjugate(t1);
+    let t1: Fp12 = fp12_mul(t1, t3);
+
+    let t0: Fp12 = fp12_mul(t0, t1);
+    let t2: Fp12 = fp12_mul(t2, t1);
+
+    let t3: Fp12 = fp12_frobenius_square(t1);
+    let t2: Fp12 = fp12_mul(t2, t3);
+
+    let t3: Fp12 = fp12_conjugate(result);
+    let t3: Fp12 = fp12_mul(t3, t0);
+
+    let t1: Fp12 = fp12_frobenius_cube(t3);
+    let t2: Fp12 = fp12_mul(t2, t1);
+
+    let t1: Fp12 = fp12_frobenius(t0);
+    let t1: Fp12 = fp12_mul(t1, t2);
+    t1
+}
+
+fn miller_loop_iter(acc: (G2, Fp12, (u64, u64)), context: (G1, G2), i: u8) -> Either<(G2, Fp12), (G2, Fp12, (u64, u64))> {
+    let (T, f, (naf_1, naf_2)): (G2, Fp12, (u64, u64)) = acc;
+    let (P, Q): (G1, G2) = context;
+
+    match jet::eq_8(i, 64) {
+        true => Left((T, f)),   
+        false => {
+            // Decompress naf digit from the compressed (u64, u64) tuple.
+            let (naf_digit, i_num): (u64, u8) = match jet::le_8(i, 33) {
+                true => (naf_1, i),
+                false => {
+                    let (_, i_num): (bool, u8) = jet::subtract_8(i, 32);
+                    (naf_2, i_num)
+                },
+            };
+
+            let (_, i_mul_2): (u8, u8) = <u16>::into(jet::multiply_8(i_num, 2));
+            let shifted_naf: u64 = jet::right_shift_64(i_mul_2, naf_digit);
+            let (_, _, _, _, _, _, _, naf_digit): (u8, u8, u8, u8, u8, u8, u8, u8) = <u64>::into(jet::and_64(shifted_naf, 3));
+
+            // Miller loop main iteration operations
+            let (line_l, line_t): (Fp12, G2) = line_double(T, P);
+            let f: Fp12 = fp12_square(f);
+            let f: Fp12 = fp12_mul(f, line_l);
+            // TODO: get rid of this
+            let T: G2 = line_t;
+
+            let (T, f): (G2, Fp12) = match jet::eq_8(naf_digit, 2) {
+                true => {
+                    let Q_NEG: G2 = g2_negate(Q);
+                    let (line_l, line_t): (Fp12, G2) = line_add(T, Q_NEG, P);
+                    (line_t, fp12_mul(f, line_l))
+                },
+                false => {
+                    match jet::eq_8(naf_digit, 1) {
+                        true => {
+                            let (line_l, line_t): (Fp12, G2) = line_add(T, Q, P);
+                            (line_t, fp12_mul(f, line_l))
+                        },
+                        false => (T, f),
+                    }
+                },
+            };
+
+            // TODO: move naf into context
+            Right((T, f, (naf_1, naf_2)))
+        }, 
+    }
+}
+
+fn miller_loop(q: G2, p: G1) -> Fp12 {
+    // TODO: we can remove this
+    let T: G2 = q;
+    let f: Fp12 = FP12_ONE;
+
+    let out: Either<(G2, Fp12), (G2, Fp12, (u64, u64))> = for_while::<miller_loop_iter>((T, f, NAF_NUMBER), (p, q));
+    let (T, f): (G2, Fp12) = unwrap_left::<(G2, Fp12, (u64, u64))>(out);
+
+    let (qx, qy, qz): (Fp2, Fp2, Fp2) = q;
+    let (px, py, pz): (FieldElement, FieldElement, FieldElement) = p;
+
+    let q1x: Fp2 = fp2_conjugate(qx);
+    let q1y: Fp2 = fp2_conjugate(qy);
+    let q1x: Fp2 = mul_by_non_residue_1_power_2(q1x);
+    let q1y: Fp2 = mul_by_non_residue_1_power_3(q1y);
+
+    let q2x: Fp2 = mul_by_non_residue_2_power_2(qx);
+    let q2y: Fp2 = mul_by_non_residue_2_power_3(qy);
+    let q2y: Fp2 = fp2_neg(q2y);
+
+    let (line_l, line_t): (Fp12, G2) = line_add(T, (q1x, q1y, FP2_ONE), p);
+    let f: Fp12 = fp12_mul(f, line_l);
+    let T: G2 = line_t;
+
+    let (line_l, line_t): (Fp12, G2) = line_add(T, (q2x, q2y, FP2_ONE), p);
+    fp12_mul(f, line_l)
+}
+
+
+#ifndef TESTING
+
+// fn test_t() {
+//     let a: Fp12 = fp12_new(
+//         fp6_new(fp2_new(1111, 2222), fp2_new(3333, 4444), fp2_new(5555, 6666)),
+//         fp6_new(fp2_new(7777, 8888), fp2_new(9999, 0001), fp2_new(1111, 2222))
+//     );
+
+//     // Already in Montgomery form
+//     let a_inverse: Fp12 = fp12_new(
+//         fp6_new (
+//             fp2_new (
+//                 10322886399694769983787725438643773946836923510314319473519435949799322377601,
+//                 7863183687851801163538735521014940442317589460778113851830687739008147204815
+//             ), 
+//             fp2_new (
+//                 14389164047841094096467556825518115909412015899075290733238770930120075598044,
+//                 1469009966430237347412144705513984692986939325074731212528871711806716110298
+//             ), 
+//             fp2_new (
+//                 4472412825780660698982871656473726872929691458461320245287924846457203763123,
+//                 5341909421263871387825205198895798284522977641729884916438139718352171969747
+//             )
+//         ),
+//         fp6_new (
+//             fp2_new (
+//                 6061364924929496629046412891162152518166605969941483867466347903031904606064,
+//                 19938954118921238902129145919274403196114553480777497664052848257401849652276
+//             ), 
+//             fp2_new (
+//                 9758687230848604844839632455910431220066810074950148597148435118600725864483,
+//                 8704644795010780526034397912875403871867477864318638311509586016120041099640
+//             ), 
+//             fp2_new (
+//                 21067231383785863699839952897278193367047902149769651247656120501434768496155,
+//                 19926085433652876298552756873218350806391722467864717132980677066102560096146
+//             )
+//         )
+//     );
+
+//     let res: Fp12 = fp12_new(
+//         fp6_new (
+//             fp2_new (
+//                 14925683022804014810631810000986751668441920011159613299940334508508937409470,
+//                 19917964437804964363503158914451963789480116764001563204215707647687207070488
+//             ), 
+//             fp2_new (
+//                 11798097442084922180619955888394840078924595301086689829424111905474166596425,
+//                 6147421359548191548981434435354936520646028265213551898686264931771448142341
+//             ), 
+//             fp2_new (
+//                 20874588926620247958874850445790598167244490678221534477442199969125927138681,
+//                 20213892089544583050574550949085625943866617524765808882057253828673031647067
+//             )
+//         ),
+//         fp6_new (
+//             fp2_new (
+//                 4079410088347151107522165922308411870689820453546238900559724513782398543460,
+//                 837054152980188002011702344570484159600198947691994820330134137826007884580
+//             ), 
+//             fp2_new (
+//                 16443529875841417221780095264359343945320547144534451318844452367851014181321,
+//                 5245682446114159728417101344125126723754694504667203014719440630039775951743
+//             ), 
+//             fp2_new (
+//                 11775659996505041381297126303680593817424887142370996395942397347734247256247,
+//                 10911864727953050723330745712078971502698063075534621713332717011439216100278
+//             )
+//         )
+//     );
+
+//     assert!(fp12_eq(res, final_exponentiation(a, a_inverse)));
+// }
+
+fn test_miller_loop() {
+    let a1: G2 = (
+        (
+            (2001484014202728412, 8092131012308524788, 3604403482680381408, 1031617175414889245),
+            (743656759915915118, 11655094547656086728, 4497771716505590753, 7138295927363345969)
+        ),
+        (
+            (259892889127376095, 15014469608320457438, 7369739921565571232, 14280497310986545915),
+            (218153669423612642, 15829644721401476347, 135275955009754999, 6186260357263818337)
+        ),
+        (
+            (489107506417408129, 1786706932022795631, 12859126755793886383, 17262318652709091592),
+            (2479830272404203547, 17846133434783767805, 6173819005427061826, 3418802542048399819)
+        )
+    );
+
+    let b1x: FieldElement = (2912607679693546312, 5511936995655195251, 12902706172558009864, 9397846083103306835);
+    let b1y: FieldElement = (1437495511466495951, 17158059474996889309, 191781524482128764, 11335012197955789281);
+    let b1z: FieldElement = (1627713843743788017, 9376184601307961949, 14525231056566793495, 8304357981978692414);
+    let b1: G1 = (b1x,b1y,b1z);
+
+    let _: Fp12 = dbg!(miller_loop(a1, b1));
+}
+
+#endif
+#endif

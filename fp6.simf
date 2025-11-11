@@ -3,6 +3,9 @@
 
 #include "fp2.simf"
 
+#define FP6_ZERO (FP2_ZERO, FP2_ZERO, FP2_ZERO)
+#define FP6_ONE (FP2_ONE, FP2_ZERO, FP2_ZERO)
+
 type Fp6 = (Fp2, Fp2, Fp2);
 
 fn fp6_new(x: Fp2, y: Fp2, z: Fp2) -> Fp6 {
@@ -89,8 +92,6 @@ fn fp6_mul(x: Fp6, y: Fp6) -> Fp6 {
     let t2: Fp2 = fp2_sub(t2, b_b);
     let tmp: Fp2 = fp2_mul_by_non_residue(c_c);
     let t2: Fp2 = fp2_add(t2, tmp);
-
-    let _: Fp2 = dbg!(t2);
 
     (t1, t2, t3)
 }

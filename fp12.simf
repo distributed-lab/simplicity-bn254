@@ -3,6 +3,8 @@
 
 #include "fp6.simf"
 
+#define FP12_ONE (FP6_ONE, FP6_ZERO)
+
 type Fp12 = (Fp6, Fp6);
 
 fn fp12_new(x: Fp6, y: Fp6) -> Fp12 {
@@ -210,10 +212,7 @@ fn fp12_cyclotomic_square(x: Fp12) -> Fp12 {
 fn fp12_n_cyclotomic_square_iter(x: Fp12, target: u8, i: u8) -> Either<Fp12, Fp12> {
     match jet::le_8(target, i) {
         true => Left(x),   
-        false => {
-            let _: bool = dbg!(true);
-            Right(fp12_cyclotomic_square(x))
-        },
+        false => Right(fp12_cyclotomic_square(x)),
     }
 }
 
