@@ -250,7 +250,13 @@ fn miller_loop(q: G2, p: G1) -> Fp12 {
 
     //let bitmask: u64 = 1; // 2^0
 
-    let (f, T): (Fp12, G2) = miller_loop_basic(q, p, FP12_ONE); // Execute for 64-th position (loop starts from 63).
+    //
+
+    // Execute for 64-th position (loop starts from 63). 
+    // Because we have 0 in NAF for 64-th position,
+    //  we only have to execute basic logic.
+    let (f, T): (Fp12, G2) = miller_loop_basic(q, p, FP12_ONE); 
+    
     let out: Either<(G2, Fp12), (G2, Fp12, u64)> = for_while::<miller_loop_iter>((T, f, bitmask), (p, q));
     let (T, f): (G2, Fp12) = unwrap_left::<(G2, Fp12, u64)>(out);
 
