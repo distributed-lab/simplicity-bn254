@@ -5,7 +5,8 @@
 #include "g2.simf"
 #include "fp12.simf"
 
-#define NAF_NUMBER (2308165762157675584, 9513995519425253508)
+#define NAF_MASK_1 2306406242643361832
+#define NAF_MASK_2 9405926186905371776
 
 type LineEval = (Fp12, G2);
 
@@ -57,7 +58,7 @@ fn line_double(q: G2, p: G1) -> LineEval {
 
     let tmp0: Fp2 = fp2_mul(Z_T, fp2_square(qz));
     let tmp0: Fp2 = fp2_double(tmp0);
-    let tmp0: Fp2 = fp2_mul_by_b0(tmp0, py);
+    let tmp0: Fp2 = fp2_mul_by_b0(tmp0, py);// check
 
     let l: Fp12 = (
         (tmp0, FP2_ZERO, FP2_ZERO),
@@ -185,53 +186,44 @@ fn final_exponentiation(z: Fp12, z_invert: Fp12) -> Fp12 {
     t1
 }
 
-fn miller_loop_iter(acc: (G2, Fp12, (u64, u64)), context: (G1, G2), i: u8) -> Either<(G2, Fp12), (G2, Fp12, (u64, u64))> {
-    let (T, f, (naf_1, naf_2)): (G2, Fp12, (u64, u64)) = acc;
+fn miller_loop_iter(acc: (G2, Fp12, u64), context: (G1, G2), i: u8) -> Either<(G2, Fp12), (G2, Fp12, u64)> {
+    let (T, f, bitmask): (G2, Fp12, u64) = acc;
     let (P, Q): (G1, G2) = context;
 
-    match jet::eq_8(i, 64) {
+    match jet::eq_8(dbg!(i), 64) {
         true => Left((T, f)),   
         false => {
-            // Decompress naf digit from the compressed (u64, u64) tuple.
-            let (naf_digit, i_num): (u64, u8) = match jet::le_8(i, 33) {
-                true => (naf_1, i),
-                false => {
-                    let (_, i_num): (bool, u8) = jet::subtract_8(i, 32);
-                    (naf_2, i_num)
-                },
-            };
-
-            let (_, i_mul_2): (u8, u8) = <u16>::into(jet::multiply_8(i_num, 2));
-            let shifted_naf: u64 = jet::right_shift_64(i_mul_2, naf_digit);
-            let (_, _, _, _, _, _, _, naf_digit): (u8, u8, u8, u8, u8, u8, u8, u8) = <u64>::into(jet::and_64(shifted_naf, 3));
-
             // Miller loop main iteration operations
             let (line_l, line_t): (Fp12, G2) = line_double(T, P);
             let f: Fp12 = fp12_square(f);
             let f: Fp12 = fp12_mul(f, line_l);
-            // TODO: get rid of this
             let T: G2 = line_t;
 
-            let (T, f): (G2, Fp12) = match jet::eq_8(naf_digit, 2) {
+            let (T, f): (G2, Fp12) = match jet::some_64(jet::and_64(NAF_MASK_1, bitmask)) {
                 true => {
-                    let Q_NEG: G2 = g2_negate(Q);
-                    let (line_l, line_t): (Fp12, G2) = line_add(T, Q_NEG, P);
+                    let one: u64 = dbg!(1);
+                    let (line_l, line_t): (Fp12, G2) = line_add(T, Q, P);
                     (line_t, fp12_mul(f, line_l))
-                },
+                }
                 false => {
-                    match jet::eq_8(naf_digit, 1) {
+                    match jet::some_64(jet::and_64(NAF_MASK_2, bitmask)) {
                         true => {
-                            let (line_l, line_t): (Fp12, G2) = line_add(T, Q, P);
+                            let two: u64 = dbg!(2);
+                            // m[i] == 2
+                            let Q_NEG: G2 = g2_negate(Q);
+                            let (line_l, line_t): (Fp12, G2) = line_add(T, Q_NEG, P);
                             (line_t, fp12_mul(f, line_l))
-                        },
+                        }
+                        // m[i] == 2
                         false => (T, f),
                     }
-                },
+                }
             };
 
-            // TODO: move naf into context
-            Right((T, f, (naf_1, naf_2)))
-        }, 
+            let bitmask: u64 = jet::left_shift_64(1, bitmask);
+
+            Right((T, f, bitmask))
+        } 
     }
 }
 
@@ -240,8 +232,10 @@ fn miller_loop(q: G2, p: G1) -> Fp12 {
     let T: G2 = q;
     let f: Fp12 = FP12_ONE;
 
-    let out: Either<(G2, Fp12), (G2, Fp12, (u64, u64))> = for_while::<miller_loop_iter>((T, f, NAF_NUMBER), (p, q));
-    let (T, f): (G2, Fp12) = unwrap_left::<(G2, Fp12, (u64, u64))>(out);
+    let bitmask: u64 = 1; // 2^0
+
+    let out: Either<(G2, Fp12), (G2, Fp12, u64)> = for_while::<miller_loop_iter>((T, f, bitmask), (p, q));
+    let (T, f): (G2, Fp12) = unwrap_left::<(G2, Fp12, u64)>(out);
 
     let (qx, qy, qz): (Fp2, Fp2, Fp2) = q;
     let (px, py, pz): (FieldElement, FieldElement, FieldElement) = p;
@@ -339,27 +333,62 @@ fn miller_loop(q: G2, p: G1) -> Fp12 {
 // }
 
 fn test_miller_loop() {
-    let a1: G2 = (
+    // Affine
+    let a: G1 = (
+        (2437184618990599435, 9967461460295048725, 523065847106288149, 4762312042132220243),
+        (594740009632949619, 4155084953073764646, 9393803618790697145, 13729987850190402909),
+        FP_ZERO
+    );
+
+    // Projective
+    let b: G2 = (
         (
-            (2001484014202728412, 8092131012308524788, 3604403482680381408, 1031617175414889245),
-            (743656759915915118, 11655094547656086728, 4497771716505590753, 7138295927363345969)
+            (2056513770419527527, 7471512706875894820, 12353292016043059926, 14198858295332109753),
+            (1247475978396289395, 7989610938603783500, 17910564013814816979, 8208376203836307886)
         ),
         (
-            (259892889127376095, 15014469608320457438, 7369739921565571232, 14280497310986545915),
-            (218153669423612642, 15829644721401476347, 135275955009754999, 6186260357263818337)
+            (2780625897959909976, 12500176327102259920, 14400004413481067226, 3038873508324518298),
+            (427541959367055387, 11922945474203155755, 12732514823209126999, 4899900378001561031)
         ),
         (
-            (489107506417408129, 1786706932022795631, 12859126755793886383, 17262318652709091592),
-            (2479830272404203547, 17846133434783767805, 6173819005427061826, 3418802542048399819)
+            (1489943732723647226, 13254171877129764018, 6803726373526347730, 14797337663295721131),
+            (2273425530516531152, 15994591960831562213, 13817429962381600795, 3687323464610168706)
         )
     );
 
-    let b1x: FieldElement = (2912607679693546312, 5511936995655195251, 12902706172558009864, 9397846083103306835);
-    let b1y: FieldElement = (1437495511466495951, 17158059474996889309, 191781524482128764, 11335012197955789281);
-    let b1z: FieldElement = (1627713843743788017, 9376184601307961949, 14525231056566793495, 8304357981978692414);
-    let b1: G1 = (b1x,b1y,b1z);
 
-    let _: Fp12 = dbg!(miller_loop(a1, b1));
+    let res_expected: Fp12 = (
+        (
+            (
+                (2869289008428322137,11635625071517294247,14851357650688383596,12228718738557824981),
+                (1686381424862098050,10110519108006463596,7895659191649610268,2231821141735942488),
+            ), 
+            (
+                (3208287419186613707,6752648636774833797,10634535895789194442,1621536786982499071),
+                (2678190465020230188,12321618724937169201,13308082923525889270,8268148143626450767),
+            ),
+            (
+                (3458289119088018034,7057632081168230811,9811435775661294800,13983443194595223264),
+                (1033190138123085914,848252794268980656,3248135443230868440,2296330869438119545),
+            )
+        ),
+        (
+            (
+                (1685979190051328172,3836366376893519164,17542748743670519757,228174278921663020),
+                (117065770115050350,5671126031833810592,5319244876087245504,11163620116403902572),
+            ),
+            (
+                (1200248406970266748,161138912008037404,2443271082800815433,416863816349652999),
+                (1009149931988687098,17190806078427306569,2852486723200846829,7106560341603292831),
+            ),
+            (
+                (1187515421340000445,10154344321248230491,13433121233819121471,13299738804381696308),
+                (184642437069231037,16199130471425088168,13302362212740826586,7264322832133967827),
+            )
+        )
+    );
+
+    assert!(fp12_eq(res_expected, dbg!(miller_loop(b, a))))
 }
 
 #endif
