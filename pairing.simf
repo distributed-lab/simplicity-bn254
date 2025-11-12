@@ -8,11 +8,11 @@
 
 // Bitmask (uint64) for positions that represents 1:
 // 3 5 14 23 33 38 49 61 65 (65 not included)
-#define NAF_MASK_1 2306406242643361832
+#define NAF_MASK_1 11529778279498137640
 
 // Bitmask (uint64) for positions that represents -1:
 // 7 10 17 19 25 30 35 44 47 51 55 57 63 
-#define NAF_MASK_2 9405926186905371776
+#define NAF_MASK_2 182554150050595968
 
 type LineEval = (Fp12, G2);
 
@@ -250,12 +250,13 @@ fn miller_loop(q: G2, p: G1) -> Fp12 {
 
     //let bitmask: u64 = 1; // 2^0
 
-    //
+    let T: G2 = q;
+    let f: Fp12 = FP12_ONE;
 
     // Execute for 64-th position (loop starts from 63). 
     // Because we have 0 in NAF for 64-th position,
     //  we only have to execute basic logic.
-    let (f, T): (Fp12, G2) = miller_loop_basic(q, p, FP12_ONE); 
+    //let (f, T): (Fp12, G2) = miller_loop_basic(T, p, f); 
     
     let out: Either<(G2, Fp12), (G2, Fp12, u64)> = for_while::<miller_loop_iter>((T, f, bitmask), (p, q));
     let (T, f): (G2, Fp12) = unwrap_left::<(G2, Fp12, u64)>(out);
