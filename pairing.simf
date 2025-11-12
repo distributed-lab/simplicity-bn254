@@ -16,6 +16,9 @@
 
 type LineEval = (Fp12, G2);
 
+
+// Algorithm 26
+// https://eprint.iacr.org/2010/354.pdf
 fn line_double(q: G2, p: G1) -> LineEval {
     let (qx, qy, qz): (Fp2, Fp2, Fp2) = q;
     let (px, py, _): (FieldElement, FieldElement, FieldElement) = p;
@@ -78,6 +81,9 @@ fn line_double(q: G2, p: G1) -> LineEval {
     (l, T)
 }
 
+
+// Algorithm 27
+// https://eprint.iacr.org/2010/354.pdf
 fn line_add(q: G2, r: G2, p: G1) -> LineEval {
     let (qx, qy, qz): (Fp2, Fp2, Fp2) = q;
     let (rx, ry, rz): (Fp2, Fp2, Fp2) = r;
