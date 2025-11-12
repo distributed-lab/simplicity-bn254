@@ -6,6 +6,7 @@
 
 // Big 256-bit number that is represented with a tuple of 4 u64 values.
 // This is an auxiliary alias just for representing a tuple of u64.
+// Encoded in BigEndian format.
 type FieldElement = (u64, u64, u64, u64);
 
 fn field_element_new(value: u256) -> FieldElement {
