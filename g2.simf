@@ -8,11 +8,13 @@
 
 type G2 = (Fp2, Fp2, Fp2);
 
+// Checks that G2 is zero.
 fn g2_is_zero(a: G2) -> bool {
     let (ax, ay, az): (Fp2, Fp2, Fp2) = a;
     fp2_is_zero(az)
 }
 
+// Returns true if provided G2 points are equal in Jakobian coordinates.
 fn g2_eq(a: G2, b: G2) -> bool {
     let (ax, ay, az): (Fp2, Fp2, Fp2) = a;
     let (bx, by, bz): (Fp2, Fp2, Fp2) = b;
@@ -39,11 +41,14 @@ fn g2_eq(a: G2, b: G2) -> bool {
     }
 }
 
+// Negates G2.
 fn g2_negate(a: G2) -> G2 {
     let (ax, ay, az): (Fp2, Fp2, Fp2) = a;
     (ax, fp2_neg(ay), az)
 }
 
+// Doubles G2 point.
+//
 // Following gnark-crypto which itself follows
 // https://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
 fn g2_double(a: G2) -> G2 {
@@ -68,7 +73,7 @@ fn g2_double(a: G2) -> G2 {
     (bx, by, bz)
 }
 
-// This is an auxiliary function provided to perform add operation over G1.
+// Auxiliary function provided to perform add operation over G2.
 fn g2_add_internal(q: G2, p: G2) -> G2 {
     let (qx, qy, qz): (Fp2, Fp2, Fp2) = q;
     let (px, py, pz): (Fp2, Fp2, Fp2) = p;
@@ -84,16 +89,6 @@ fn g2_add_internal(q: G2, p: G2) -> G2 {
     match u_and_s {
         true => g2_double(q),
         false => {
-            // TODO: Check if we really need this.
-            // Probably, while we do not care about the speed, 
-            // such conditional execution will only increase the program size.
-            // match jet::and_1(fp2_eq(U1, U2), fp2_eq(S1, S2)) {
-            //     true => g2_double(p),
-            //     false => {
-                    
-            //     }
-            // }
-
             let H: Fp2 = fp2_sub(U2, U1);
             let I: Fp2 = fp2_square(fp2_double(H));
             let J: Fp2 = fp2_mul(H, I);
@@ -112,6 +107,8 @@ fn g2_add_internal(q: G2, p: G2) -> G2 {
     }
 }
 
+// Adds two G2 points.
+//
 // Following gnark-crypto which itself follows
 // https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl
 fn g2_add(q: G2, p: G2) -> G2 {
@@ -130,10 +127,12 @@ fn g2_add(q: G2, p: G2) -> G2 {
     }
 }
 
+// Subtracts one G2 point from the other.
 fn g2_sub(a: G2, b: G2) -> G2 {
     g2_add(a, g2_negate(b))
 }
 
+// Auxiliary function for g2_scalar_mul.
 fn g2_scalar_mul_bit_iterate(acc: (u64, G2), ctx: (u64, G2), i: u8) -> Either<G2, (u64, G2)> {
     let (bitmask, sum): (u64, G2) = acc;
     
@@ -154,22 +153,8 @@ fn g2_scalar_mul_bit_iterate(acc: (u64, G2), ctx: (u64, G2), i: u8) -> Either<G2
     }
 }
 
-// TODO: Use after array_fold will be fixed
-// fn g2_scalar_mul_bit_iterate(bit: u1, ctx: (G2, G2)) -> (G2, G2) {
-//     let (sum, p): (G2, G2) = ctx;
-//     let sum: G2 = g2_double(sum);
-//     match <u1>::into(bit) {
-//         true => {
-//             (sum, p)
-//         },
-//         false => {
-//             (g2_add(sum, p), p)
-//         }
-//     }
-// }
-
-// Multiply point by scalar. Uses fast exponention idea. 
-// It is sssumed that scalar is in the Montgomery form.
+// Multiply G2 point by scalar. Uses fast exponention approach. 
+// It is assumed that scalar is in the Montgomery form.
 fn g2_scalar_mul(p: G2, s: FieldElement) -> G2 {
     // Most significant bit at the most left position
     let (s1, s2, s3, s4): (u64, u64, u64, u64) = fr_from_mont(s);
@@ -189,18 +174,6 @@ fn g2_scalar_mul(p: G2, s: FieldElement) -> G2 {
 
     let out: Either<G2, (u64, G2)> = for_while::<g2_scalar_mul_bit_iterate>((bitmask, res), (s4, p));
     let res: G2 = unwrap_left::<(u64, G2)>(out);
-
-
-    // TODO: Use after array_fold will be fixed
-    // let s1bits: [u1; 64] = <u64>::into(s1);
-    // let s2bits: [u1; 64] = <u64>::into(s2);
-    // let s3bits: [u1; 64] = <u64>::into(s3);
-    // let s4bits: [u1; 64] = <u64>::into(s4);
-
-    // let (res, _): (G2, G2) = array_fold::<g2_scalar_mul_bit_iterate, 64>(s1bits, (G2_ZERO, p));
-    // let (res, _): (G2, G2) = array_fold::<g2_scalar_mul_bit_iterate, 64>(s2bits, (res, p));
-    // let (res, _): (G2, G2) = array_fold::<g2_scalar_mul_bit_iterate, 64>(s3bits, (res, p));
-    // let (res, _): (G2, G2) = array_fold::<g2_scalar_mul_bit_iterate, 64>(s4bits, (res, p));
 
     res
 }

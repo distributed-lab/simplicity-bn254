@@ -20,13 +20,10 @@ fn fr_mod() -> u256 {
     21888242871839275222246405745257275088548364400416034343698204186575808495617
 }
 
-
 // Decomposes FieldElement into 256-bit value and corresponding modulus.
 fn field_element_decompose(field_element: FieldElement) -> u256 {
     <FieldElement>::into(field_element)
 }
-
-// TODO: rename FieldElement to BigInt
 
 // Returns true if the provided value is less then the FieldElement modulus.
 fn field_element_smaller_then_modulus(field_element: FieldElement, modulus: FieldElement) -> bool {
@@ -192,6 +189,8 @@ fn field_element_neg(x: FieldElement, modulus: FieldElement) -> FieldElement {
     }
 }
 
+// Performs a Montgomery-style multiplication of a 256-bit field element `t`
+// by the modular inverse of another field element `qInvNeg` modulo `q`.
 fn field_element_q_inv_mul(
     c2: u64,
     q0: u64, q1: u64, q2: u64, q3: u64,
@@ -220,6 +219,11 @@ fn field_element_q_inv_mul(
     ((u0, u1, u2, u3), (t0, t1, t2, t3))
 }
 
+// Auxiliary function for field_element_mul.
+//
+// Multiplies a 256-bit field element `y` (represented by limbs y0..y3) by a 64-bit scalar `x`,
+// accumulates the result with another 256-bit element `t` (t0..t3),
+// and performs a Montgomery-style reduction modulo `q` using `qInvNeg`.
 fn field_element_process_x_mul(
     x: u64, 
     y0: u64, y1: u64, y2: u64, y3: u64, 
@@ -246,6 +250,20 @@ fn field_element_process_x_mul(
 }
 
 // Note that the provided FieldElements should be already in montgomery format.
+//
+// Performs full 256-bit field multiplication of `x` and `y` modulo `modulus` using
+// Montgomery-style arithmetic. 
+//
+// Steps:
+// 1. Multiplies the most significant limb `x3` with all limbs of `y` and reduces via `field_element_q_inv_mul`.
+// 2. Iteratively processes the remaining limbs (`x2`, `x1`, `x0`) using `field_element_process_x_mul`.
+// 3. Accumulates intermediate products into a 256-bit result `(t0..t3)`.
+// 4. Conditionally subtracts the modulus to ensure the result is fully reduced.
+//
+// Inputs:
+// - `x`, `y`: 256-bit field elements (tuples of four `u64` limbs).
+// - `modulus`: 256-bit modulus (tuples of four `u64` limbs).
+// - `qInvNeg`: precomputed value for Montgomery reduction.
 fn field_element_mul(x: FieldElement, y: FieldElement, modulus: FieldElement, qInvNeg: u64) -> FieldElement {
     let (x0, x1, x2, x3): (u64, u64, u64, u64) = x;
     let (y0, y1, y2, y3): (u64, u64, u64, u64) = y;
@@ -308,10 +326,12 @@ fn field_element_mul(x: FieldElement, y: FieldElement, modulus: FieldElement, qI
     }
 }
 
+// Converts the provided FieldElement to Montgomery format.
 fn field_element_to_mont(value: FieldElement, modulus: FieldElement, rSquare: FieldElement, qInvNeg: u64) -> FieldElement {
     field_element_mul(value, rSquare, modulus, qInvNeg)
 }
 
+// Converts the provided FieldElement from Montgomery format.
 fn field_element_from_mont_part(
     z0: u64, z1: u64, z2: u64, z3: u64,
     q0: u64, q1: u64, q2: u64, q3: u64,
@@ -347,7 +367,10 @@ fn field_element_from_mont(value: FieldElement, modulus: FieldElement, qInvNeg: 
         },
     }
 }
-
+// Auxiliary function for field_element_exp that:
+// - Iterates over each bit of a 64-bit limb of the exponent.
+// - Squares the accumulator at each step.
+// - Conditionally multiplies by `a` if the current exponent bit is set
 fn field_element_scalar_mul_bit_iterate(acc: (u64, FieldElement), ctx: (u64, FieldElement, FieldElement, u64), i: u8) -> Either<FieldElement, (u64, FieldElement)> {
     let (bitmask, total): (u64, FieldElement) = acc;
     
@@ -368,7 +391,8 @@ fn field_element_scalar_mul_bit_iterate(acc: (u64, FieldElement), ctx: (u64, Fie
     }
 }
 
-// Same implementation as in G1
+// Performs a 256-bit exponentiation of a field element `a` to the power `x` modulo `modulus`,
+// using Montgomery arithmetic and a left-to-right binary method.
 fn field_element_exp(a: FieldElement, x: FieldElement, one: FieldElement, modulus: FieldElement, qInvNeg :u64) -> FieldElement {
     // Most significant bit at the most left position
     let (x1, x2, x3, x4): (u64, u64, u64, u64) = field_element_from_mont(x, modulus, qInvNeg);

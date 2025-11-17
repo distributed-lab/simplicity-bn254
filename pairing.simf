@@ -14,7 +14,9 @@
 
 type LineEval = (Fp12, G2);
 
-
+// Computes the line function for doubling a point Q on G2 with respect to a point P on G1
+// Returns a tuple (LineEval, T) where LineEval is the evaluated line in Fp12, and T is the new doubled point Q.
+//
 // Algorithm 26
 // https://eprint.iacr.org/2010/354.pdf
 fn line_double(q: G2, p: G1) -> LineEval {
@@ -79,7 +81,10 @@ fn line_double(q: G2, p: G1) -> LineEval {
     (l, T)
 }
 
-
+// Algorithm for computing the line function for adding two points Q and R on G2
+// with respect to a point P on G1.  
+// Returns a tuple (LineEval, T) where LineEval is the evaluated line in Fp12, and T is the new point Q + R.
+//
 // Algorithm 27
 // https://eprint.iacr.org/2010/354.pdf
 fn line_add(q: G2, r: G2, p: G1) -> LineEval {
@@ -449,13 +454,11 @@ fn test_pair() {
         )
     );
 
-    //let z: Fp12 = dbg!(miller_loop(b2, a2));
+    // let _: Fp12 = dbg!(pair(b1, a1, miller_loop_inverse_1));
+    // let _: Fp12 = dbg!(pair(b2, a2, miller_loop_inverse_2));
 
-    //let _: Fp12 = dbg!(pair(b1, a1, miller_loop_inverse_1));
-    let _: Fp12 = dbg!(pair(b2, a2, miller_loop_inverse_2));
-
-
-    // assert!(fp12_eq(dbg!(pair(b1, a1, miller_loop_inverse_1)), dbg!(pair(b2, a2, miller_loop_inverse_2))))
+    // Requires 80+ GB of RAM so it is commented.
+    assert!(fp12_eq(dbg!(pair(b1, a1, miller_loop_inverse_1)), dbg!(pair(b2, a2, miller_loop_inverse_2))))
 }
 
 #endif

@@ -8,12 +8,13 @@
 
 type G1 = (FieldElement, FieldElement, FieldElement);
 
+// Checks that G1 is zero.
 fn g1_is_zero(a: G1) -> bool {
     let (ax, ay, az): (FieldElement, FieldElement, FieldElement) = a;
     field_element_is_zero(az)
 }
 
-// Returns true if value point a is equal to point b in Jacobian coordinates.
+// Returns true if provided G1 points are equal in Jakobian coordinates.
 fn g1_eq(a: G1, b: G1) -> bool {
     let (ax, ay, az): (FieldElement, FieldElement, FieldElement) = a;
     let (bx, by, bz): (FieldElement, FieldElement, FieldElement) = b;
@@ -41,12 +42,14 @@ fn g1_eq(a: G1, b: G1) -> bool {
     }
 }
 
+// Negates G1.
 fn g1_negate(a: G1) -> G1 {
     let (ax, ay, az): (FieldElement, FieldElement, FieldElement) = a;
     (ax, fp_neg(ay), az)
 }
 
-
+// Doubles G1 point.
+//
 // Following gnark-crypto which itself follows
 // https://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
 fn g1_double(a: G1) -> G1 {
@@ -71,8 +74,8 @@ fn g1_double(a: G1) -> G1 {
     (bx, by, bz)
 }
 
-// This is an auxiliary function provided to perform add operation over G1.
-fn g1_add_main_operations(q: G1, p: G1) -> G1 {
+// Auxiliary function provided to perform add operation over G1.
+fn g1_add_internal(q: G1, p: G1) -> G1 {
     let (qx, qy, qz): (FieldElement, FieldElement, FieldElement) = q;
     let (px, py, pz): (FieldElement, FieldElement, FieldElement) = p;
 
@@ -87,16 +90,6 @@ fn g1_add_main_operations(q: G1, p: G1) -> G1 {
     match u_and_s {
         true => g1_double(q),
         false => {
-            // TODO: Check if we really need this.
-            // Probably, while we do not care about the speed, 
-            // such conditional execution will only increase the program size.
-            // match jet::and_1(fp_eq(U1, U2), fp_eq(S1, S2)) {
-            //     true => g1_double(p),
-            //     false => {
-                    
-            //     }
-            // }
-
             let H: FieldElement = fp_sub(U2, U1);
             let I: FieldElement = fp_square(fp_double(H));
             let J: FieldElement = fp_mul(H, I);
@@ -115,6 +108,8 @@ fn g1_add_main_operations(q: G1, p: G1) -> G1 {
     }
 }
 
+// Adds two G1 points.
+//
 // Following gnark-crypto which itself follows
 // https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl
 fn g1_add(q: G1, p: G1) -> G1 {
@@ -129,15 +124,16 @@ fn g1_add(q: G1, p: G1) -> G1 {
                 true => q,
                 false => p,
             },
-        false => g1_add_main_operations(q, p),
+        false => g1_add_internal(q, p),
     }
 }
 
-
+// Subtracts one G1 point from the other.
 fn g1_sub(a: G1, b: G1) -> G1 {
     g1_add(a, g1_negate(b))
 }
 
+// Auxiliary function for g1_scalar_mul.
 fn g1_scalar_mul_bit_iterate(acc: (u64, G1), ctx: (u64, G1), i: u8) -> Either<G1, (u64, G1)> {
     let (bitmask, sum): (u64, G1) = acc;
     
@@ -158,22 +154,8 @@ fn g1_scalar_mul_bit_iterate(acc: (u64, G1), ctx: (u64, G1), i: u8) -> Either<G1
     }
 }
 
-// TODO: Use after array_fold will be fixed
-// fn g1_scalar_mul_bit_iterate(bit: u1, ctx: (G1, G1)) -> (G1, G1) {
-//     let (sum, p): (G1, G1) = ctx;
-//     let sum: G1 = g1_double(sum);
-//     match <u1>::into(bit) {
-//         true => {
-//             (sum, p)
-//         },
-//         false => {
-//             (g1_add(sum, p), p)
-//         }
-//     }
-// }
-
-// Multiply point by scalar. Uses fast exponention idea. 
-// It is sssumed that scalar is in the Montgomery form.
+// Multiply G1 point by scalar. Uses fast exponention approach. 
+// It is assumed that scalar is in the Montgomery form.
 fn g1_scalar_mul(p: G1, s: FieldElement) -> G1 {
     // Most significant bit at the most left position
     let (s1, s2, s3, s4): (u64, u64, u64, u64) = fr_from_mont(s);
@@ -193,18 +175,6 @@ fn g1_scalar_mul(p: G1, s: FieldElement) -> G1 {
 
     let out: Either<G1, (u64, G1)> = for_while::<g1_scalar_mul_bit_iterate>((bitmask, res), (s4, p));
     let res: G1 = unwrap_left::<(u64, G1)>(out);
-
-
-    // TODO: Use after array_fold will be fixed
-    // let s1bits: [u1; 64] = <u64>::into(s1);
-    // let s2bits: [u1; 64] = <u64>::into(s2);
-    // let s3bits: [u1; 64] = <u64>::into(s3);
-    // let s4bits: [u1; 64] = <u64>::into(s4);
-
-    // let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s1bits, (G1_ZERO, p));
-    // let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s2bits, (res, p));
-    // let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s3bits, (res, p));
-    // let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s4bits, (res, p));
 
     res
 }

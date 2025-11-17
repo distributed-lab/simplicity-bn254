@@ -3,6 +3,7 @@
 
 #include "fp.simf"
 
+// Constants for power mul.
 #define MUL_1_POWER_1_X (212598772761311868, 1278438861261381767, 14585784200204367754, 12653890742059813127)
 #define MUL_1_POWER_1_Y (1200023580730561873, 15866167890766973222, 14992204589386555739, 11683091849979440498)
 #define MUL_1_POWER_2_X (1825854335138010348, 8791150885551868305, 3782902503040509012, 13075984984163199792)
@@ -34,55 +35,59 @@
 
 type Fp2 = (FieldElement, FieldElement);
 
+// Creates a new Fp2 element from two 256-bit integers.
 fn fp2_new(x: u256, y: u256) -> Fp2 {
     (fp_new(x), fp_new(y))
 }
 
+// Checks if an Fp2 element is zero.
 fn fp2_is_zero(x: Fp2) -> bool {
     let (x0, x1): (FieldElement, FieldElement) = x;
-
     let res: u1 = jet::and_1(<bool>::into(field_element_is_zero(x0)), <bool>::into(field_element_is_zero(x1)));
     <u1>::into(res)
 }
 
+// Adds two Fp2 elements component-wise modulo FP_MOD.
 fn fp2_add(x: Fp2, y: Fp2) -> Fp2 {
     let (x0, x1): (FieldElement, FieldElement) = x;
     let (y0, y1): (FieldElement, FieldElement) = y;
     (fp_add(x0, y0), fp_add(x1, y1))
 }
 
+// Subtracts one Fp2 element from another component-wise modulo FP_MOD.
 fn fp2_sub(x: Fp2, y: Fp2) -> Fp2 {
     let (x0, x1): (FieldElement, FieldElement) = x;
     let (y0, y1): (FieldElement, FieldElement) = y;
     (fp_sub(x0, y0), fp_sub(x1, y1))
 }
 
+// Doubles an Fp2 element component-wise.
 fn fp2_double(x: Fp2) -> Fp2 {
     let (x0, x1): (FieldElement, FieldElement) = x;
     (fp_double(x0), fp_double(x1))
 }
 
+// Negates an Fp2 element.
 fn fp2_neg(x: Fp2) -> Fp2 {
     let (x0, x1): (FieldElement, FieldElement) = x;
     (fp_neg(x0), fp_neg(x1))
 }
 
+// Computes the Fp2 conjugate.
 fn fp2_conjugate(x: Fp2) -> Fp2 {
     let (x0, x1): (FieldElement, FieldElement) = x;
     (x0, fp_neg(x1))
 } 
 
+// Checks equality of two Fp2 elements.
 fn fp2_eq(x: Fp2, y: Fp2) -> bool {
     let (x0, x1): (FieldElement, FieldElement) = x;
     let (y0, y1): (FieldElement, FieldElement) = y;
-
-    let res: u1 = jet::and_1(
-        <bool>::into(fp_eq(x0, y0)),
-        <bool>::into(fp_eq(x1, y1))
-    );
+    let res: u1 = jet::and_1(<bool>::into(fp_eq(x0, y0)), <bool>::into(fp_eq(x1, y1)));
     <u1>::into(res)
 }
 
+// Multiplies two Fp2.
 fn fp2_mul(x: Fp2, y: Fp2) -> Fp2 {
     let (x0, x1): (FieldElement, FieldElement) = x;
     let (y0, y1): (FieldElement, FieldElement) = y;
@@ -99,60 +104,54 @@ fn fp2_mul(x: Fp2, y: Fp2) -> Fp2 {
     (z0, z1)
 }
 
+// Squares an Fp2 element.
+fn fp2_square(x: Fp2) -> Fp2 {
+    let (x0, x1): (FieldElement, FieldElement) = x;
+    let a: FieldElement = fp_add(x0, x1);
+    let b: FieldElement = fp_sub(x0, x1);
+    let a: FieldElement = fp_mul(a, b);
+    let b: FieldElement = fp_mul(x0, x1);
+    let b: FieldElement = fp_double(b);
+
+    (a, b)
+}
+
+// Converts an Fp2 element to Montgomery form.
 fn fp2_to_mont(x: Fp2) -> Fp2 {
     let (x0, x1): (FieldElement, FieldElement) = x;
-
-    let _: FieldElement = dbg!(fp_to_mont(x0));
     (fp_to_mont(x0), fp_to_mont(x1))
 }
 
+// Converts an Fp2 element from Montgomery form.
 fn fp2_from_mont(x: Fp2) -> Fp2 {
     let (x0, x1): (FieldElement, FieldElement) = x;
-
     (fp_to_mont(x0), fp_to_mont(x1))
 }
 
-// Multiply this element by quadratic nonresidue 9 + u
+// Multiplies an Fp2 element by the quadratic nonresidue.
 fn fp2_mul_by_non_residue(x: Fp2) -> Fp2 {
     let (x0, x1): (FieldElement, FieldElement) = x;
-
     let p2: Fp2 = fp2_double(x);
     let p4: Fp2 = fp2_double(p2);
     let (p8_0, p8_1): (FieldElement, FieldElement) = fp2_double(p4);
 
     let c0: FieldElement = fp_add(p8_0, x0);
     let c0: FieldElement = fp_sub(c0, x1);
-
     let c1: FieldElement = fp_add(p8_1, x1);
     let c1: FieldElement = fp_add(c1, x0);
 
     (c0, c1)
 }
 
-fn fp2_square(x: Fp2) -> Fp2 {
-    let (x0, x1): (FieldElement, FieldElement) = x;
-
-    let a: FieldElement = fp_add(x0, x1);
-    let b: FieldElement = fp_sub(x0, x1);
-    let a: FieldElement = fp_mul(a, b);
-
-    let b: FieldElement = fp_mul(x0, x1);
-    let b: FieldElement = fp_double(b);
-
-    (
-        a,
-        b,
-    )
-}
-
+// Multiplies both components of an Fp2 element by a base field element.
 fn fp2_mul_by_b0(x: Fp2, y: FieldElement) -> Fp2 {
     let (x0, x1): (FieldElement, FieldElement) = x;
-
     let c0: FieldElement = fp_mul(x0, y);
     let c1: FieldElement = fp_mul(x1, y);
 
     (c0, c1)
 }
+
 
 fn mul_by_non_residue_1_power_1(x: Fp2) -> Fp2 {
     fp2_mul(x, (MUL_1_POWER_1_X, MUL_1_POWER_1_Y))

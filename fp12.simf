@@ -7,10 +7,12 @@
 
 type Fp12 = (Fp6, Fp6);
 
+// Creates a new Fp12 element from two Fp6 elements.
 fn fp12_new(x: Fp6, y: Fp6) -> Fp12 {
     (x, y)
 }
 
+// Adds two Fp12 elements component-wise.
 fn fp12_add(x: Fp12, y: Fp12) -> Fp12 {
     let (x0, x1): (Fp6, Fp6) = x;
     let (y0, y1): (Fp6, Fp6) = y;
@@ -18,6 +20,7 @@ fn fp12_add(x: Fp12, y: Fp12) -> Fp12 {
     (fp6_add(x0, y0), fp6_add(x1, y1))
 }
 
+// Subtracts one Fp12 element from another component-wise.
 fn fp12_sub(x: Fp12, y: Fp12) -> Fp12 {
     let (x0, x1): (Fp6, Fp6) = x;
     let (y0, y1): (Fp6, Fp6) = y;
@@ -25,18 +28,19 @@ fn fp12_sub(x: Fp12, y: Fp12) -> Fp12 {
     (fp6_sub(x0, y0), fp6_sub(x1, y1))
 }
 
+// Converts an Fp12 element to Montgomery form component-wise.
 fn fp12_to_mont(x: Fp12) -> Fp12 {
     let (x0, x1): (Fp6, Fp6) = x;
-
     (fp6_to_mont(x0), fp6_to_mont(x1))
 }
 
+// Converts an Fp12 element from Montgomery form component-wise.
 fn fp12_from_mont(x: Fp12) -> Fp12 {
     let (x0, x1): (Fp6, Fp6) = x;
-
     (fp6_from_mont(x0), fp6_from_mont(x1))
 }
 
+// Multiplies two Fp12 elements using Karatsuba-like formula and nonresidue adjustments.
 fn fp12_mul(x: Fp12, y: Fp12) -> Fp12 {
     let (x0, x1): (Fp6, Fp6) = x;
     let (y0, y1): (Fp6, Fp6) = y;
@@ -56,6 +60,7 @@ fn fp12_mul(x: Fp12, y: Fp12) -> Fp12 {
     (c0, c1)
 }
 
+// Checks equality of two Fp12 elements.
 fn fp12_eq(x: Fp12, y: Fp12) -> bool {
     let (x0, x1): (Fp6, Fp6) = x;
     let (y0, y1): (Fp6, Fp6) = y;
@@ -68,24 +73,25 @@ fn fp12_eq(x: Fp12, y: Fp12) -> bool {
     <u1>::into(res)
 }
 
+// Doubles an Fp12 element component-wise.
 fn fp12_double(x: Fp12) -> Fp12 {
     let (x0, x1): (Fp6, Fp6) = x;
-
     (fp6_double(x0), fp6_double(x1))
 }
 
+// Negates an Fp12 element component-wise.
 fn fp12_neg(x: Fp12) -> Fp12 {
     let (x0, x1): (Fp6, Fp6) = x;
-
     (fp6_neg(x0), fp6_neg(x1))
 }
 
+// Computes the conjugate of an Fp12 element (negates the second Fp6 component).
 fn fp12_conjugate(x: Fp12) -> Fp12 {
     let (x0, x1): (Fp6, Fp6) = x;
-
     (x0, fp6_neg(x1))
 }
 
+// Squares an Fp12 element using optimized cyclotomic formula.
 fn fp12_square(x: Fp12) -> Fp12 {
     let (x0, x1): (Fp6, Fp6) = x;
 
@@ -103,6 +109,7 @@ fn fp12_square(x: Fp12) -> Fp12 {
     (c0, c1)
 }
 
+// Applies the Frobenius map to an Fp12 element.
 fn fp12_frobenius(x: Fp12) -> Fp12 {
     let ((x0, x1, x2), (x3, x4, x5)): ((Fp2, Fp2, Fp2), (Fp2, Fp2, Fp2)) = x;
 
@@ -113,12 +120,10 @@ fn fp12_frobenius(x: Fp12) -> Fp12 {
     let t4: Fp2 = mul_by_non_residue_1_power_3(fp2_conjugate(x4));
     let t5: Fp2 = mul_by_non_residue_1_power_5(fp2_conjugate(x5));
 
-    (
-        (t0, t1, t2),
-        (t3, t4, t5)
-    )
+    ((t0, t1, t2), (t3, t4, t5))
 }
 
+// Applies the Frobenius map squared to an Fp12 element.
 fn fp12_frobenius_square(x: Fp12) -> Fp12 {
     let ((x0, x1, x2), (x3, x4, x5)): ((Fp2, Fp2, Fp2), (Fp2, Fp2, Fp2)) = x;
 
@@ -131,6 +136,7 @@ fn fp12_frobenius_square(x: Fp12) -> Fp12 {
     ((x0, x1, x2), (x3, x4, x5))
 }
 
+// Applies the Frobenius map cubed to an Fp12 element.
 fn fp12_frobenius_cube(x: Fp12) -> Fp12 {
     let ((x0, x1, x2), (x3, x4, x5)): ((Fp2, Fp2, Fp2), (Fp2, Fp2, Fp2)) = x;
 
@@ -141,12 +147,10 @@ fn fp12_frobenius_cube(x: Fp12) -> Fp12 {
     let t4: Fp2 = mul_by_non_residue_3_power_3(fp2_conjugate(x4));
     let t5: Fp2 = mul_by_non_residue_3_power_5(fp2_conjugate(x5));
 
-    (
-        (t0, t1, t2),
-        (t3, t4, t5)
-    )
+    ((t0, t1, t2), (t3, t4, t5))
 }
 
+// Computes the cyclotomic square of an Fp12 element (optimized squaring in cyclotomic subgroup).
 fn fp12_cyclotomic_square(x: Fp12) -> Fp12 {
     let ((x0, x1, x2), (x3, x4, x5)): ((Fp2, Fp2, Fp2), (Fp2, Fp2, Fp2)) = x;
 
@@ -209,6 +213,7 @@ fn fp12_cyclotomic_square(x: Fp12) -> Fp12 {
     ((x0, x1, x2), (x3, x4, x5))
 }
 
+// Iteration function for n-times cyclotomic squaring.
 fn fp12_n_cyclotomic_square_iter(x: Fp12, target: u8, i: u8) -> Either<Fp12, Fp12> {
     match jet::le_8(target, i) {
         true => Left(x),   
@@ -216,10 +221,12 @@ fn fp12_n_cyclotomic_square_iter(x: Fp12, target: u8, i: u8) -> Either<Fp12, Fp1
     }
 }
 
+// Computes n-times cyclotomic squaring of an Fp12 element.
 fn fp12_n_cyclotomic_square(x: Fp12, n: u8) -> Fp12 {
     unwrap_left::<Fp12>(for_while::<fp12_n_cyclotomic_square_iter>(x, n))
 }
 
+// Exponentiates an Fp12 element using cyclotomic squaring and optimized chain.
 fn fp12_exponentiation(x: Fp12) -> Fp12 {
     let t3: Fp12 = fp12_cyclotomic_square(x);    
     let t5: Fp12 = fp12_cyclotomic_square(t3);
