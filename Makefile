@@ -7,4 +7,6 @@ test:
 - file:
 	bash scripts/test-file.sh $(name)
 
-
+compute:
+- inverse:
+	bash scripts/inverse.sh "$(input)"
