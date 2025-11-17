@@ -154,6 +154,20 @@ fn g1_scalar_mul_bit_iterate(acc: (u64, G1), ctx: (u64, G1), i: u8) -> Either<G1
     }
 }
 
+// NOTE: Use after array_fold 2^n bug will be fixed
+// fn g1_scalar_mul_bit_iterate(bit: u1, ctx: (G1, G1)) -> (G1, G1) {
+//     let (sum, p): (G1, G1) = ctx;
+//     let sum: G1 = g1_double(sum);
+//     match <u1>::into(bit) {
+//         true => {
+//             (sum, p)
+//         },
+//         false => {
+//             (g1_add(sum, p), p)
+//         }
+//     }
+// }
+
 // Multiply G1 point by scalar. Uses fast exponention approach. 
 // It is assumed that scalar is in the Montgomery form.
 fn g1_scalar_mul(p: G1, s: FieldElement) -> G1 {
@@ -175,6 +189,17 @@ fn g1_scalar_mul(p: G1, s: FieldElement) -> G1 {
 
     let out: Either<G1, (u64, G1)> = for_while::<g1_scalar_mul_bit_iterate>((bitmask, res), (s4, p));
     let res: G1 = unwrap_left::<(u64, G1)>(out);
+
+    // NOTE: Use after array_fold 2^n bug will be fixed
+    // let s1bits: [u1; 64] = <u64>::into(s1);
+    // let s2bits: [u1; 64] = <u64>::into(s2);
+    // let s3bits: [u1; 64] = <u64>::into(s3);
+    // let s4bits: [u1; 64] = <u64>::into(s4);
+
+    // let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s1bits, (g1_zero(), p));
+    // let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s2bits, (res, p));
+    // let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s3bits, (res, p));
+    // let (res, _): (G1, G1) = array_fold::<g1_scalar_mul_bit_iterate, 64>(s4bits, (res, p));
 
     res
 }
