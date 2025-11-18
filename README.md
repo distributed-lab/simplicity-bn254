@@ -1,5 +1,11 @@
 # simplicity-bn254
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Pull Requests welcome](https://img.shields.io/badge/PRs-welcome-ff69b4.svg?style=flat-square)](https://github.com/distributed-lab/simplicity-bn254/issues)
+<a href="https://github.com/distributed-lab/simplicity-bn254">
+<img src="https://img.shields.io/github/stars/distributed-lab/simplicity-bn254?style=social"/>
+</a>
+
 An implementation of zk-friendly [bn254](https://neuromancer.sk/std/bn/bn254) curve using SimplicityHL language.
 
 Includes:
