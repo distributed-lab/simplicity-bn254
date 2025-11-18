@@ -28,7 +28,7 @@ In addition, build scripts may seem overly complex due to the specifics of worki
 - `make test file name=NAME` - takes only functions within `TESTING` macros that start from `test` in the specified file. "NAME" can be a name of any SimplicityHL file in the root without ".simf" prefix.
 
 ### Evaluation of Fp12 inverse element for pairing
-In order to calculate a pairing function, a product of `miller_loop` function which is an `Fp12` element should be inversed due to the program size saving reasons. To compute an inverse of `Fp12` use:
+To execute the pairing you can run the `test_pair` in the `pairing.simf` file. But, before running the pairing iteself you should do some precompute. In order to calculate a pairing function, a product of `miller_loop` function which is an `Fp12` element should be inversed due to the program size saving reasons. To compute an inverse of `Fp12` use:
 
 ```shell
 make compute inverse input="(((( Fp12 ... ))))"
@@ -45,9 +45,9 @@ make compute inverse input="((((530129493658355355, 17916075167625392463, 471118
 ```
 
 So, in general the flow is follows:
-1. Execute Miller loop to receive the value
-2. Evaluate the inverse element to be used in the pairing's final exponention
-3. Execute pairing
+1. Execute Miller loop to receive the value;
+2. Evaluate the inverse element to be used in the pairing's final exponention;
+3. Execute pairing.
 
 ## Benchmark
 On 14-core Apple M3 Max, 36 GB RAM single pairing computation takes ~210 seconds and requires ~12 - 17 GB of real RAM.
