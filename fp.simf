@@ -23,51 +23,62 @@
 // Fp field modulus sub 2
 #define FP_INV_EXP (1463492787413574090 , 16965902948054780933 , 9407901146999403537 , 10765297436657115661)
 
-
+// Adds two field elements modulo FP_MOD.
 fn fp_add(x: FieldElement, y: FieldElement) -> FieldElement {
     field_element_add(x, y, FP_MOD)
 }
 
+// Doubles a field element modulo FP_MOD.
 fn fp_double(x: FieldElement) -> FieldElement {
     field_element_double(x, FP_MOD)
 }
 
+// Subtracts one field element from another modulo FP_MOD.
 fn fp_sub(x: FieldElement, y: FieldElement) -> FieldElement {
     field_element_sub(x, y, FP_MOD)
 }
 
+// Computes the negation of a field element modulo FP_MOD.
 fn fp_neg(x: FieldElement) -> FieldElement {
     field_element_neg(x, FP_MOD)
 }
 
+// Multiplies two field elements modulo FP_MOD using Montgomery multiplication.
 fn fp_mul(x: FieldElement, y: FieldElement) -> FieldElement {
     field_element_mul(x, y, FP_MOD, FP_Q_INV_NEG)
 }
 
+// Squares a field element modulo FP_MOD.
 fn fp_square(x: FieldElement) -> FieldElement {
     fp_mul(x, x)
 }
 
+// Converts a field element into Montgomery form.
 fn fp_to_mont(x: FieldElement) -> FieldElement {
     field_element_to_mont(x, FP_MOD, FP_R_SQUARE, FP_Q_INV_NEG)
 }
 
+// Creates a new field element from a 256-bit integer and converts it to Montgomery form.
 fn fp_new(value: u256) -> FieldElement {
     fp_to_mont(field_element_new(value))
 }
 
+// Converts a field element from Montgomery form back to regular representation.
 fn fp_from_mont(x: FieldElement) -> FieldElement {
     field_element_from_mont(x, FP_MOD, FP_Q_INV_NEG)
 }
 
+// Checks equality of two field elements.
 fn fp_eq(x: FieldElement, y: FieldElement) -> bool {
     field_element_eq(x, y)
 }
 
+// Raises a field element to an exponent modulo FP_MOD using Montgomery exponentiation.
 fn fp_exp(a: FieldElement, x: FieldElement) -> FieldElement {
     field_element_exp(a, x, FP_ONE, FP_MOD, FP_Q_INV_NEG)
 }
 
+// Computes an invert element of FieldElement according to the Fermat's Little Theorem.
 fn fp_inv(a: FieldElement) -> FieldElement {
     field_element_exp(a, FP_INV_EXP, FP_ONE, FP_MOD, FP_Q_INV_NEG)
 }

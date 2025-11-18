@@ -8,37 +8,44 @@
 
 type Fp6 = (Fp2, Fp2, Fp2);
 
+// Creates a new Fp6 element from three Fp2 elements.
 fn fp6_new(x: Fp2, y: Fp2, z: Fp2) -> Fp6 {
     (x, y, z)
 }
 
+// Adds two Fp6 elements component-wise.
 fn fp6_add(x: Fp6, y: Fp6) -> Fp6 {
     let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
     let (y0, y1, y2): (Fp2, Fp2, Fp2) = y;
     (fp2_add(x0, y0), fp2_add(x1, y1), fp2_add(x2, y2))
 }
 
+// Subtracts one Fp6 element from another component-wise.
 fn fp6_sub(x: Fp6, y: Fp6) -> Fp6 {
     let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
     let (y0, y1, y2): (Fp2, Fp2, Fp2) = y;
     (fp2_sub(x0, y0), fp2_sub(x1, y1), fp2_sub(x2, y2))
 }
 
+// Doubles an Fp6 element component-wise.
 fn fp6_double(x: Fp6) -> Fp6 {
     let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
     (fp2_double(x0), fp2_double(x1), fp2_double(x2))
 }
 
+// Negates an Fp6 element component-wise.
 fn fp6_neg(x: Fp6) -> Fp6 {
     let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
     (fp2_neg(x0), fp2_neg(x1), fp2_neg(x2))
 }
 
+// Computes the Fp6 conjugate (negates the third component).
 fn fp6_conjugate(x: Fp6) -> Fp6 {
     let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
     (x0, x1, fp2_neg(x2))
 } 
 
+// Checks equality of two Fp6 elements.
 fn fp6_eq(x: Fp6, y: Fp6) -> bool {
     let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
     let (y0, y1, y2): (Fp2, Fp2, Fp2) = y;
@@ -56,6 +63,7 @@ fn fp6_eq(x: Fp6, y: Fp6) -> bool {
     <u1>::into(res)
 }
 
+// Multiplies two Fp6 elements using Karatsuba-like formula and nonresidue adjustments.
 fn fp6_mul(x: Fp6, y: Fp6) -> Fp6 {
     let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
     let (y0, y1, y2): (Fp2, Fp2, Fp2) = y;
@@ -66,7 +74,6 @@ fn fp6_mul(x: Fp6, y: Fp6) -> Fp6 {
 
     // Construct t1
     let t1: Fp2 = fp2_add(y1, y2);
-
     let tmp: Fp2 = fp2_add(x1, x2);
     let t1: Fp2 = fp2_mul(t1, tmp);
     let t1: Fp2 = fp2_sub(t1, b_b);
@@ -76,7 +83,6 @@ fn fp6_mul(x: Fp6, y: Fp6) -> Fp6 {
 
     // Construct t3
     let t3: Fp2 = fp2_add(y0, y2);
-
     let tmp: Fp2 = fp2_add(x0, x2);
     let t3: Fp2 = fp2_mul(t3, tmp);
     let t3: Fp2 = fp2_sub(t3, a_a);
@@ -85,7 +91,6 @@ fn fp6_mul(x: Fp6, y: Fp6) -> Fp6 {
 
     // Construct t2
     let t2: Fp2 = fp2_add(y0, y1);
-
     let tmp: Fp2 = fp2_add(x0, x1);
     let t2: Fp2 = fp2_mul(t2, tmp);
     let t2: Fp2 = fp2_sub(t2, a_a);
@@ -96,18 +101,19 @@ fn fp6_mul(x: Fp6, y: Fp6) -> Fp6 {
     (t1, t2, t3)
 }
 
+// Converts an Fp6 element to Montgomery form component-wise.
 fn fp6_to_mont(x: Fp6) -> Fp6 {
     let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
-
     (fp2_to_mont(x0), fp2_to_mont(x1), fp2_to_mont(x2))
 }
 
+// Converts an Fp6 element from Montgomery form component-wise.
 fn fp6_from_mont(x: Fp6) -> Fp6 {
     let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
-
     (fp2_from_mont(x0), fp2_from_mont(x1), fp2_from_mont(x2))
 }
 
+// Squares an Fp6 element.
 fn fp6_square(x: Fp6) -> Fp6 {
     let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
 
@@ -140,9 +146,9 @@ fn fp6_square(x: Fp6) -> Fp6 {
     (c0, c1, x2)
 }
 
+// Multiplies an Fp6 element by the cubic nonresidue v (shifts components with Fp2 nonresidue multiplication).
 fn fp6_mul_by_non_residue(x: Fp6) -> Fp6 {
     let (x0, x1, x2): (Fp2, Fp2, Fp2) = x;
-
     (fp2_mul_by_non_residue(x2), x0, x1)
 }
 

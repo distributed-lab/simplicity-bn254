@@ -22,46 +22,55 @@
 // Fr field modulus sub 2
 #define FR_INV_EXP (1463492787413574090, 16965902948054780928, 13419314142665758269, 16912579398983483403)
 
+// Adds two field elements modulo FR_MOD.
 fn fr_add(x: FieldElement, y: FieldElement) -> FieldElement {
     field_element_add(x, y, FR_MOD)
 }
 
+// Doubles a field element modulo FR_MOD.
 fn fr_double(x: FieldElement) -> FieldElement {
     field_element_double(x, FR_MOD)
 }
 
+// Subtracts y from x modulo FR_MOD.
 fn fr_sub(x: FieldElement, y: FieldElement) -> FieldElement {
     field_element_sub(x, y, FR_MOD)
 }
 
+// Negates a field element modulo FR_MOD.
 fn fr_neg(x: FieldElement) -> FieldElement {
     field_element_neg(x, FR_MOD)
 }
 
+// Multiplies two field elements modulo FR_MOD using Montgomery reduction.
 fn fr_mul(x: FieldElement, y: FieldElement) -> FieldElement {
     field_element_mul(x, y, FR_MOD, FR_Q_INV_NEG)
 }
 
+// Squares a field element modulo FR_MOD.
 fn fr_square(x: FieldElement) -> FieldElement {
     fr_mul(x, x)
 }
 
+// Converts a field element into Montgomery form for faster multiplication.
 fn fr_to_mont(x: FieldElement) -> FieldElement {
     field_element_to_mont(x, FR_MOD, FR_R_SQUARE, FR_Q_INV_NEG)
 }
 
+// Converts a Montgomery-form field element back to standard representation.
 fn fr_from_mont(x: FieldElement) -> FieldElement {
     field_element_from_mont(x, FR_MOD, FR_Q_INV_NEG)
 }
 
+// Exponentiates a field element to the power x modulo FR_MOD.
 fn fr_exp(a: FieldElement, x: FieldElement) -> FieldElement {
     field_element_exp(a, x, FR_ONE, FR_MOD, FR_Q_INV_NEG)
 }
 
+// Computes the multiplicative inverse of a field element modulo FR_MOD.
 fn fr_inv(a: FieldElement) -> FieldElement {
     field_element_exp(a, FR_INV_EXP, FR_ONE, FR_MOD, FR_Q_INV_NEG)
 }
-
 
 #ifdef TESTING
 
