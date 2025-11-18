@@ -14,7 +14,7 @@ Includes:
 - Pairing function which leverages Ate Optimal according to [High-Speed Software Implementation of the Optimal Ate Pairing over Barreto–Naehrig Curves](https://eprint.iacr.org/2010/354.pdf).
 
 ## Requirements
-Use `simply` CLI to compile as [recommended](https://docs.simplicity-lang.org/getting-started/cli/#overview). To install execute:
+Use `simply` CLI to compile as [recommended](https://docs.simplicity-lang.org/getting-started/cli/#overview). To install, execute:
 ```shell
 cargo install --git https://github.com/starkware-bitcoin/simply simply
 ```
@@ -24,26 +24,26 @@ You may also need to install `mcpp`:
 brew install mcpp
 ```
 
-You can find the build scripts in [scripts](./scripts/) package which are essentially a bash scripts that execute `mcpp` and `simply` utilites.
+You can find the build scripts in [scripts](./scripts/) package which are essentially a bash scripts that execute `mcpp` and `simply` utilities.
 We use `mcpp` compiler to handle `#include` and `#define` directives. 
 In conclusion, build scripts may seem overly complicated due to the specifics of working with tests.
 
 ## Usage 
 
-All tests are surrounded with `#ifdef TESTING ... #endif` block which enables easy test functions management. 
-Any tests function name begins with `test_` prefix which enables the usage of `simply test` CLI. 
+All tests are surrounded by `#ifdef TESTING ... #endif` block which enables easy test functions management. 
+Any test function names begin with `test_` prefix, which enables the usage of `simply test` CLI. 
 
 We also use `mcpp` to handle imports by using `#include "FILE_NAME"` directives. 
 Also, each file content is surrounded with `#ifndef FILE_NAME #define FILE_NAME .. #endif`, which allows us to manage dobule imports easily.
 
-All tests data are generated using [gnark-crypto](https://github.com/Consensys/gnark-crypto) which also was a refference implementation of fields.
+All tests data are generated using [gnark-crypto](https://github.com/Consensys/gnark-crypto), which was also a reference implementation of fields.
 
 ### Running tests
 - `make test all` - takes only functions within `TESTING` macros that start from `test`. Executes them one by one;
 - `make test file name=NAME` - takes only functions within `TESTING` macros that start from `test` in the specified file. "NAME" can be a name of any SimplicityHL file in the root without ".simf" prefix.
 
 ### Executing pairing
-To execute the pairing you can run the `test_pair()` in the `pairing.simf` file. Note that before executing the pairing iteself you should evaluate some precompute data. In order to calculate a pairing function, a product of `miller_loop` function which is an `Fp12` element should be inversed. Due to the program size saving reasons we allow providing the inverse in the witness rather then evaluating it in the script. To compute an inverse of `Fp12` we provide a CLI wich can be used as follows:
+To execute the pairing, you can run the `test_pair()` in the `pairing.simf` file. Note that before executing the pairing itself, you should evaluate some additional witness data. In order to calculate a pairing function, a product of `miller_loop` function, which is an `Fp12` element, should be inversed. Due to the program size saving reasons, we allow providing the inverse in the witness rather then evaluating it in the script. To compute an inverse of `Fp12` we provide a CLI which can be used as follows:
 
 ```shell
 make compute inverse input="(((( Fp12 element ... ))))"
@@ -95,9 +95,9 @@ Running inverse computation...
 )
 ```
 
-So, in general to execute pariring test for your own data you should:
-1. Insert your input points in the Affine coordinates in `test_miller()` function. Run it and receive the reslut of Miller loop execution;
-2. Evaluate the inverse element to be used in the pairing's final exponention using our CLI;
+So, in general, to execute a pairing test for your own witness, you should:
+1. Insert your input points in the Affine coordinates in `test_miller()` function. Run it and receive the result of the Miller loop execution;
+2. Evaluate the inverse element to be used in the pairing's final exponentiation using our CLI;
 3. Insert your input points in the Affine coordinates in `test_pair()` function in a couple with Miller loop result inverse and evaluate the pairing.
 
 ## Benchmark
