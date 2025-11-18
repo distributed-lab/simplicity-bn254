@@ -31,5 +31,5 @@ for file in $simf_files; do
     # apply define for tests
     mcpp -P -I . -DTESTING ${TEMP_DIR}/${base_name}_compiled1.simf > ./target/${base_name}/${base_name}.simf 
 
-    simply test --logging info --entrypoint ./target/${base_name}/${base_name}.simf
+    simply test --logging debug --entrypoint ./target/${base_name}/${base_name}.simf
 done
