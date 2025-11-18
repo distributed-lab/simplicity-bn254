@@ -95,4 +95,4 @@ So, in general to execute pariring test for your own data you should:
 3. Insert your input points in the Affine coordinates in `test_pair()` function in a couple with Miller loop result inverse and evaluate the pairing.
 
 ## Benchmark
-On 14-core Apple M3 Max, 36 GB RAM single pairing compilatio and evaluation takes ~210 seconds and consumes ~12 - 17 GB of real RAM.
+On 14-core Apple M3 Max/36RAM the compilation and evaluation of script with single pairing takes ~210 seconds and consumes ~12 - 17 GB of real RAM.
