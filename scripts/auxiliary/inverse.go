@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math/big"
 	"os"
 	"regexp"
 	"strconv"
@@ -12,23 +11,8 @@ import (
 	"github.com/consensys/gnark-crypto/ecc/bn254/fp"
 )
 
-// Converts 4 reversed u64 limbs into Fp
-func fpFromLimbs(limbs [4]uint64) fp.Element {
-	// Reverse limb order (Fp little-endian)
-	reversed := [4]uint64{limbs[3], limbs[2], limbs[1], limbs[0]}
-
-	v := new(big.Int)
-	for i := 3; i >= 0; i-- {
-		v.Lsh(v, 64)
-		v.Or(v, new(big.Int).SetUint64(reversed[i]))
-	}
-	var fp fp.Element
-	fp.SetBigInt(v)
-	return fp
-}
-
 func fp2(a, b [4]uint64) bn254.E2 {
-	return bn254.E2{A0: fpFromLimbs(a), A1: fpFromLimbs(b)}
+	return bn254.E2{A0: a, A1: b}
 }
 
 func fp6(a0a, a0b, a1a, a1b, a2a, a2b [4]uint64) bn254.E6 {

@@ -457,7 +457,7 @@ fn test_pair() {
     let _: Fp12 = dbg!(pair(b1, a1, miller_loop_inverse_1));
     // let _: Fp12 = dbg!(pair(b2, a2, miller_loop_inverse_2));
 
-    // Requires 80+ GB of RAM so it is commented.
+    // Requires a lot of RAM.
     // assert!(fp12_eq(dbg!(pair(b1, a1, miller_loop_inverse_1)), dbg!(pair(b2, a2, miller_loop_inverse_2))))
 }
 

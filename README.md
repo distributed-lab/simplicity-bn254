@@ -41,4 +41,4 @@ make compute inverse input="((((530129493658355355, 17916075167625392463, 471118
 ```
 
 ## Benchmark
-On 14-core Apple M3 Max, 36 GB RAM single pairing computation takes ~210 seconds and requires ~40 GB of RAM.
+On 14-core Apple M3 Max, 36 GB RAM single pairing computation takes ~210 seconds and requires ~12 - 17 GB of real RAM.
