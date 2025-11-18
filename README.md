@@ -5,7 +5,7 @@ An implementation of zk-friendly [bn254](https://neuromancer.sk/std/bn/bn254) cu
 Includes:
 - bn254 curve definition;
 - Fr, Fp field operations with Fp2, Fp6, Fp12 extensions. Fr and Fp fields have been implemented according to [gnark-crypto](https://github.com/Consensys/gnark-crypto)
-- G1, G2 group operations on bn254;
+- G1, G2 group operations on bn254. All points are represented in Jacobian coordinates, except of the input points where we leverage Affine coordinates.
 - Pairing function which leverages Ate Optimal according to [High-Speed Software Implementation of the Optimal Ate Pairing over Barreto–Naehrig Curves](https://eprint.iacr.org/2010/354.pdf).
 
 ## Usage
