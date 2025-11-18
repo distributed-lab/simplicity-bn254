@@ -8,14 +8,14 @@
 // MILLER_CONST = 6x + 2, where x = 4965661367192848881 (curve parameter).
 // Thus, MILLER_CONST = 29793968203157093288, but we remove the most significant bit due to algorithm purposes.
 // We receive a 64-bit value, which we use to iterate in the same way as in the scalar multiplication (from most significant bit).
-// Why use thi method instead of NAF? The answers is that NAF requires additionall condition to be checked in the Miller loop, 
-// so in result, implemntation with NAF works ~5% slower.
+// Why we use this method instead of NAF? The answers is that NAF requires additionall condition to be checked in the Miller loop, 
+// so in the result implemntation with NAF works ~5% slower.
 #define MILLER_CONST 11347224129447541672
 
 type LineEval = (Fp12, G2);
 
 // Computes the line function for doubling a point Q on G2 with respect to a point P on G1
-// Returns a tuple (LineEval, T) where LineEval is the evaluated line in Fp12, and T is the new doubled point Q.
+// Returns a tuple (Fp12, T) where Fp12 containts the evaluated line, and T is the new doubled point Q.
 //
 // Algorithm 26
 // https://eprint.iacr.org/2010/354.pdf
@@ -83,7 +83,7 @@ fn line_double(q: G2, p: G1) -> LineEval {
 
 // Algorithm for computing the line function for adding two points Q and R on G2
 // with respect to a point P on G1.  
-// Returns a tuple (LineEval, T) where LineEval is the evaluated line in Fp12, and T is the new point Q + R.
+// Returns a tuple (Fp12, T) where Fp12 contains the evaluated line, and T is the new point Q + R.
 //
 // Algorithm 27
 // https://eprint.iacr.org/2010/354.pdf
@@ -269,7 +269,7 @@ fn miller_loop(q: G2, p: G1) -> Fp12 {
 
 
 // Evaluates Ate Optimal pairing, 
-// requries invert value for miller loop result to be provided
+// Requries invert value for Miller loop result to be provided,
 // because we dont want to evaluate it here.
 fn pair(Q: G2, P: G1, miller_loop_inv: Fp12) -> Fp12 {
     let res: Fp12 = miller_loop(Q, P);
