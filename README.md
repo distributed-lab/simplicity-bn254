@@ -24,10 +24,11 @@ In conclusion, build scripts may seem overly complicated due to the specifics of
 
 ## Usage 
 
-All tests are surrounded with `#ifdef TESTING ... #endif` block which enables easy management. 
+All tests are surrounded with `#ifdef TESTING ... #endif` block which enables easy test functions management. 
 Any tests function name begins with `test_` prefix which enables the usage of `simply test` CLI. 
 
-We also use `mcpp` to handle imports by using `#include FILE_NAME`. Also, each file content is surrounded with `#ifndef FILE_NAME #define FILE_NAME .. #endif`, which allows us to manage dobule imports easily.
+We also use `mcpp` to handle imports by using `#include "FILE_NAME"` directives. 
+Also, each file content is surrounded with `#ifndef FILE_NAME #define FILE_NAME .. #endif`, which allows us to manage dobule imports easily.
 
 All tests data are generated using [gnark-crypto](https://github.com/Consensys/gnark-crypto) which also was a refference implementation of fields.
 
