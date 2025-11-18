@@ -4,9 +4,9 @@ An implementation of zk-friendly [bn254](https://neuromancer.sk/std/bn/bn254) cu
 
 Includes:
 - bn254 curve definition;
-- Fr, Fp field operations with Fp2, Fp6, Fp12 extensions;
+- Fr, Fp field operations with Fp2, Fp6, Fp12 extensions. Fr and Fp fields have been implemented according to [gnark-crypto](https://github.com/Consensys/gnark-crypto)
 - G1, G2 group operations on bn254;
-- pairing function;
+- Pairing function which leverages Ate Optimal according to [High-Speed Software Implementation of the Optimal Ate Pairing over Barreto–Naehrig Curves](https://eprint.iacr.org/2010/354.pdf).
 
 ## Usage
 Use `simply` CLI to compile as [recommended](https://docs.simplicity-lang.org/getting-started/cli/#overview). To install execute:
@@ -18,6 +18,9 @@ You may also need to install `mcpp`:
 ```shell
 brew install mcpp
 ```
+
+Build scripts leverages `mcpp` to handle `#include` and `#define` derectives. 
+In addition, build scripts may seem overly complex due to the specifics of working with tests.
 
 ## Testing
 - `make test all` - takes only functions within `TESTING` macros that start from `test`. Executes them one by one;
@@ -32,7 +35,7 @@ make compute inverse input="(((( Fp12 ... ))))"
 
 where `(((( Fp12 ... ))))` is a tuple of `u64` which represents `Fp12`. The tuple is in big endian format.
 
-It will produce an inversed well-formatted `Fp12` element that could be used for pasting it directly into the simplicity test. 
+It will produce an inversed well-formatted `Fp12` element that could be used for pasting it directly into the simplicity test. Of course, correctness of inverse will be checked in the pairing method.
 
 Program usage example is as follows:
 
