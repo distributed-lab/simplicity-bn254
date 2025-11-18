@@ -18,7 +18,7 @@ You may also need to install `mcpp`:
 brew install mcpp
 ```
 
-You can find the build scripts in [scripts](./scripts/) package which are essentially a bash schipts that execute `mcpp` and `simply` utilites.
+You can find the build scripts in [scripts](./scripts/) package which are essentially a bash scripts that execute `mcpp` and `simply` utilites.
 We use `mcpp` compiler to handle `#include` and `#define` derectives. 
 In conclusion, build scripts may seem overly complicated due to the specifics of working with tests.
 
