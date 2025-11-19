@@ -14,7 +14,9 @@ Includes:
 - Pairing function which leverages Ate Optimal according to [High-Speed Software Implementation of the Optimal Ate Pairing over Barreto–Naehrig Curves](https://eprint.iacr.org/2010/354.pdf).
 
 
-⚠️ __Note that this code is a PoC and has not been audited. The size of compiled program for one pairing evaluation is 10.5 KBytes__
+⚠️ __Note that this code is a PoC and has not been audited.__
+
+⚔️ __The size of compiled program which evaluates one pairing is 10.5 KBytes.__
 
 ## Requirements
 Use `simply` CLI to compile as [recommended](https://docs.simplicity-lang.org/getting-started/cli/#overview). To install, execute:
