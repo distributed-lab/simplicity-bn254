@@ -47,6 +47,9 @@ All tests data are generated using [gnark-crypto](https://github.com/Consensys/g
 - `make test all` - takes only functions within `TESTING` macros that start from `test`. Executes them one by one;
 - `make test file name=NAME` - takes only functions within `TESTING` macros that start from `test` in the specified file. "NAME" can be a name of any SimplicityHL file in the root without ".simf" prefix.
 
+### Build program
+Check [build.sh](./scripts/build.sh) bash script for additional information. It currently configured to build and run [example-main.simf](./example-main.simf) file using [example-witness.simf](./example-main.simf) witness which is the same as in `test_pair()`.
+
 ### Executing pairing
 To execute the pairing, you can run the `test_pair()` in the `pairing.simf` file. Note that before executing the pairing itself, you should evaluate some additional witness data. In order to calculate a pairing function, a product of `miller_loop` function, which is an `Fp12` element, should be inversed. Due to the program size saving reasons, we allow providing the inverse in the witness rather then evaluating it in the script. To compute an inverse of `Fp12` we provide a CLI which can be used as follows:
 

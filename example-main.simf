@@ -1,0 +1,10 @@
+#include "pairing.simf"
+
+fn main() {
+    let a: G1 = witness::A;
+    let b: G2 = witness::B;
+    let miller_loop_inverse: Fp12 = witness::MILLER_LOOP_INV;
+    let result: Fp12 = witness::RESULT;
+
+    assert!(fp12_eq(dbg!(pair(b, a, miller_loop_inverse)), result));
+}
