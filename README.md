@@ -47,7 +47,7 @@ All tests data are generated using [gnark-crypto](https://github.com/Consensys/g
 - `make test all` - takes only functions within `TESTING` macros that start from `test`. Executes them one by one;
 - `make test file name=NAME` - takes only functions within `TESTING` macros that start from `test` in the specified file. "NAME" can be a name of any SimplicityHL file in the root without ".simf" prefix.
 
-### Build program
+### Building program
 Check [build.sh](./scripts/build.sh) bash script for additional information. It currently configured to build and run [example-main.simf](./example-main.simf) file using [example-witness.simf](./example-main.simf) witness which is the same as in `test_pair()`.
 
 ### Executing pairing
