@@ -13,6 +13,9 @@ Includes:
 - bn254 curve definition and overations over groups: G1 (over Fp), G2 (twisted group over Fp2). We represent all points in Jacobian coordinates, except of the inputs, where we use Affine coordinates;
 - Pairing function which leverages Ate Optimal according to [High-Speed Software Implementation of the Optimal Ate Pairing over Barreto–Naehrig Curves](https://eprint.iacr.org/2010/354.pdf).
 
+
+⚠️ __Note that this code is a PoC and has not been audited. The size of compiled program for one pairing evaluation is 10.5 KBytes__
+
 ## Requirements
 Use `simply` CLI to compile as [recommended](https://docs.simplicity-lang.org/getting-started/cli/#overview). To install, execute:
 ```shell
