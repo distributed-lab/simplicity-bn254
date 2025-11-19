@@ -16,7 +16,7 @@ Includes:
 
 ⚠️ __Note that this code is a PoC and has not been audited.__
 
-⚔️ __The size of compiled program which evaluates one pairing is 10.5 KBytes.__
+⚔️ __The size of compiled program which evaluates one pairing is 10.5 KBytes and consumes ~4.2M weight units.__
 
 ## Requirements
 Use `simply` CLI to compile as [recommended](https://docs.simplicity-lang.org/getting-started/cli/#overview). To install, execute:
