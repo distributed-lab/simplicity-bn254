@@ -36,7 +36,7 @@ In conclusion, build scripts may seem overly complicated due to the specifics of
 ## Usage 
 
 All tests are surrounded by `#ifdef TESTING ... #endif` block which enables easy test functions management. 
-Any test function names begin with `test_` prefix, which enables the usage of `simply test` CLI. 
+Any test function name begin with `test_` prefix, which enables the usage of `simply test` CLI. 
 
 We also use `mcpp` to handle imports by using `#include "FILE_NAME"` directives. 
 Also, each file content is surrounded with `#ifndef FILE_NAME #define FILE_NAME .. #endif`, which allows us to manage dobule imports easily.
