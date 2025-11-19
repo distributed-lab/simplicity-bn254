@@ -374,7 +374,7 @@ fn test_miller() {
 
     
 
-    let res: Fp12 = dbg(miller_loop(Q, P));
+    let res: Fp12 = dbg!(miller_loop(Q, P));
 }
 
 fn test_pair() {
